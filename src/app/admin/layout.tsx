@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { AdminRole } from '@/types';
+import { getStoredOrders } from '@/lib/store';
+import { Order } from '@/types';
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -12,38 +13,92 @@ import {
   Layers,
   Users,
   Settings,
-  ExternalLink,
-  ShieldAlert,
   ShieldCheck,
-  UserCheck,
   Bell,
   LogOut,
-  Lock,
   Menu,
-  X
+  X,
+  Phone,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  ArrowRight,
+  ChevronRight
 } from 'lucide-react';
 
-const ROLES: { id: AdminRole; label: string; desc: string }[] = [
-  { id: 'owner', label: 'Owner / Super Admin', desc: 'Full system access & security' },
-  { id: 'manager', label: 'Store Manager', desc: 'Catalog, stock & order control' },
-  { id: 'order_staff', label: 'Order & Dispatch Staff', desc: 'Order verification & courier dispatch' },
-  { id: 'content_staff', label: 'Content & Catalog Staff', desc: 'Product descriptions & media only' }
-];
+function formatNotificationTime(dateString: string): string {
+  try {
+    const diffMs = Date.now() - new Date(dateString).getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHrs = Math.floor(diffMin / 60);
+    const diffDays = Math.floor(diffHrs / 24);
+
+    if (diffMin < 1) return 'Just now';
+    if (diffMin < 60) return `${diffMin}m ago`;
+    if (diffHrs < 24) return `${diffHrs}h ago`;
+    return `${diffDays}d ago`;
+  } catch {
+    return 'Recent';
+  }
+}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const [currentRole, setCurrentRole] = useState<AdminRole>('owner');
   const [adminUser, setAdminUser] = useState<any>(null);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // Notification Bell state & data
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
+  const notificationDropdownRef = useRef<HTMLDivElement | null>(null);
 
   const isLoginPage = pathname === '/admin/login';
 
   useEffect(() => {
     setIsMobileSidebarOpen(false);
+    setIsNotificationsOpen(false);
   }, [pathname]);
+
+  // Click outside listener for notification popup
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        notificationDropdownRef.current &&
+        !notificationDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsNotificationsOpen(false);
+      }
+    }
+    if (isNotificationsOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isNotificationsOpen]);
+
+  // Load orders for live notifications
+  const loadOrderNotifications = () => {
+    try {
+      const allOrders = getStoredOrders();
+      // Show pending review orders first, or the newest COD orders
+      const pending = allOrders.filter(o => o.status === 'pending_review');
+      const newest = allOrders.slice(0, 8);
+      setPendingOrders(pending.length > 0 ? pending : newest);
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    loadOrderNotifications();
+    window.addEventListener('sh_orders_updated', loadOrderNotifications);
+    return () => window.removeEventListener('sh_orders_updated', loadOrderNotifications);
+  }, []);
 
   useEffect(() => {
     if (isLoginPage) {
@@ -59,13 +114,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
       const parsed = JSON.parse(storedAuth);
       setAdminUser(parsed);
-
-      const savedRole = localStorage.getItem('sh_admin_active_role') as AdminRole;
-      if (savedRole) {
-        setCurrentRole(savedRole);
-      } else if (parsed.role) {
-        setCurrentRole(parsed.role);
-      }
     } catch (e) {
       router.replace('/admin/login');
       return;
@@ -74,23 +122,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [pathname, isLoginPage, router]);
 
-  const handleRoleChange = (role: AdminRole) => {
-    setCurrentRole(role);
-    localStorage.setItem('sh_admin_active_role', role);
-  };
-
   const handleLogout = () => {
     localStorage.removeItem('sh_admin_auth');
     localStorage.removeItem('sh_admin_active_role');
     router.replace('/admin/login');
   };
 
-  // If on admin login page, render children without sidebar or topbar
   if (isLoginPage) {
     return <>{children}</>;
   }
 
-  // Loading state while checking admin session
   if (isAuthChecking) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f1217', color: '#ffffff', flexDirection: 'column', gap: '1rem' }}>
@@ -106,13 +147,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const navLinks = [
-    { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, roles: ['owner', 'manager', 'order_staff'] },
-    { href: '/admin/orders', label: 'Order Management', icon: Package, roles: ['owner', 'manager', 'order_staff'], badge: 'COD Hub' },
-    { href: '/admin/inventory', label: 'Inventory & Stock', icon: Layers, roles: ['owner', 'manager'] },
-    { href: '/admin/products', label: 'Product Catalogue', icon: ShoppingBag, roles: ['owner', 'manager', 'content_staff'] },
-    { href: '/admin/customers', label: 'Customer Directory', icon: Users, roles: ['owner', 'manager', 'order_staff'] },
-    { href: '/admin/roles', label: 'Roles & Permissions', icon: ShieldCheck, roles: ['owner', 'manager'], badge: 'Access' },
-    { href: '/admin/settings', label: 'Settings & Integrations', icon: Settings, roles: ['owner'] }
+    { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/admin/orders', label: 'Order Management', icon: Package, badge: 'COD Hub' },
+    { href: '/admin/inventory', label: 'Inventory & Stock', icon: Layers },
+    { href: '/admin/products', label: 'Product Catalogue', icon: ShoppingBag },
+    { href: '/admin/customers', label: 'Customer Directory', icon: Users },
+    { href: '/admin/roles', label: 'Roles & Permissions', icon: ShieldCheck, badge: 'Security' },
+    { href: '/admin/settings', label: 'Settings & Integrations', icon: Settings }
   ];
 
   const getBreadcrumbLabel = () => {
@@ -125,6 +166,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (pathname.startsWith('/admin/settings')) return 'Settings & Integrations';
     return 'Admin';
   };
+
+  // Count unread pending review orders
+  const unreviewedCount = pendingOrders.filter(o => o.status === 'pending_review').length;
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f4f5f7' }}>
@@ -139,7 +183,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Sidebar */}
       <aside className={`admin-sidebar ${isMobileSidebarOpen ? 'open' : ''}`}>
         {/* Brand Header */}
-        <div style={{ paddingBottom: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ paddingBottom: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{ width: 38, height: 38, borderRadius: '50%', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Image src="/logo.svg" alt="SH" width={26} height={26} />
@@ -177,68 +221,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
         </div>
 
-        {/* Role Selector */}
-        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.75rem', borderRadius: 'var(--radius-md)', marginBottom: '1.25rem', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ fontSize: '0.7rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-            <ShieldCheck size={12} style={{ color: 'var(--sh-gold)' }} />
-            Active Role Simulation:
-          </div>
-          <select
-            value={currentRole}
-            onChange={(e) => handleRoleChange(e.target.value as AdminRole)}
-            style={{
-              width: '100%',
-              background: '#1f242c',
-              color: '#ffffff',
-              border: '1px solid rgba(255,255,255,0.2)',
-              borderRadius: 6,
-              padding: '0.4rem 0.5rem',
-              fontSize: '0.8rem',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            {ROLES.map(r => (
-              <option key={r.id} value={r.id}>
-                {r.label}
-              </option>
-            ))}
-          </select>
-          <div style={{ fontSize: '0.675rem', color: '#94a3b8', marginTop: 4, lineHeight: 1.3 }}>
-            {ROLES.find(r => r.id === currentRole)?.desc}
-          </div>
-        </div>
-
-        {/* Navigation list */}
-        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+        {/* Navigation list (Clean, direct access with no role simulation) */}
+        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
           {navLinks.map(link => {
-            const hasAccess = link.roles.includes(currentRole);
             const isActive = pathname === link.href;
             const Icon = link.icon;
-
-            if (!hasAccess) {
-              return (
-                <div
-                  key={link.href}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.65rem 1rem',
-                    color: '#4b5563',
-                    fontSize: '0.85rem',
-                    borderRadius: 'var(--radius-md)',
-                    cursor: 'not-allowed',
-                    opacity: 0.6
-                  }}
-                  title="Restricted for current role"
-                >
-                  <Icon size={16} />
-                  <span>{link.label}</span>
-                  <span style={{ marginLeft: 'auto', fontSize: '0.65rem', background: '#374151', padding: '0.1rem 0.4rem', borderRadius: 4 }}>Locked</span>
-                </div>
-              );
-            }
 
             return (
               <Link
@@ -259,32 +246,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        {/* Bottom Actions: Storefront Link & Admin Logout */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+        {/* Bottom Actions: Status indicator & Sign Out (Public storefront link deleted) */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.25rem', marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: '#10b981' }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} className="animate-pulse-subtle"></span>
-            <span>Cloud Storefront Active</span>
+            <span>Cloud Storefront &amp; COD Active</span>
           </div>
-
-          <Link
-            href="/"
-            target="_blank"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.4rem',
-              background: 'rgba(255,255,255,0.08)',
-              color: '#ffffff',
-              padding: '0.6rem',
-              borderRadius: 'var(--radius-md)',
-              fontSize: '0.8rem',
-              fontWeight: 600
-            }}
-          >
-            <span>Open Public Storefront</span>
-            <ExternalLink size={14} />
-          </Link>
 
           <button
             onClick={handleLogout}
@@ -296,7 +263,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               background: 'rgba(220, 38, 38, 0.15)',
               border: '1px solid rgba(220, 38, 38, 0.3)',
               color: '#fca5a5',
-              padding: '0.6rem',
+              padding: '0.65rem',
               borderRadius: 'var(--radius-md)',
               fontSize: '0.8rem',
               fontWeight: 700,
@@ -304,7 +271,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               transition: 'background 0.2s'
             }}
           >
-            <LogOut size={14} />
+            <LogOut size={15} />
             <span>Sign Out Admin</span>
           </button>
         </div>
@@ -312,7 +279,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Main Content View */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflowY: 'auto' }}>
-        {/* Top bar with mobile hamburger and breadcrumbs */}
+        {/* Top bar with mobile hamburger, breadcrumbs & notifications */}
         <header className="admin-topbar" style={{ height: 60, background: '#ffffff', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             {/* Mobile Hamburger Menu Toggle */}
@@ -336,7 +303,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Menu size={18} />
             </button>
 
-            {/* Breadcrumb matching modern admin standard */}
+            {/* Breadcrumb */}
             <div className="admin-breadcrumb-text" style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.85rem' }}>
               <span style={{ color: '#6b7280', fontWeight: 500 }}>SH Admin</span>
               <span style={{ color: '#9ca3af' }}>&gt;</span>
@@ -345,28 +312,208 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            {/* Notification Bell */}
-            <button
-              type="button"
-              title="Notifications"
-              style={{
-                position: 'relative',
-                background: 'transparent',
-                border: 'none',
-                padding: '0.4rem',
-                borderRadius: '50%',
-                cursor: 'pointer',
-                color: '#6b7280',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Bell size={18} />
-              <span style={{ position: 'absolute', top: 3, right: 3, width: 8, height: 8, background: '#ef4444', borderRadius: '50%', border: '2px solid #ffffff' }} />
-            </button>
+            {/* Notification Bell with Order Notifications Dropdown */}
+            <div style={{ position: 'relative' }} ref={notificationDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsNotificationsOpen(prev => !prev)}
+                title="View New Order Notifications"
+                aria-label="View New Order Notifications"
+                style={{
+                  position: 'relative',
+                  background: isNotificationsOpen ? '#ecfdf5' : '#f9fafb',
+                  border: isNotificationsOpen ? '1px solid #a7f3d0' : '1px solid #e5e7eb',
+                  padding: '0.5rem',
+                  borderRadius: '50%',
+                  cursor: 'pointer',
+                  color: isNotificationsOpen ? '#047857' : '#4b5563',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <Bell size={18} />
+                {unreviewedCount > 0 && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: -2,
+                      right: -2,
+                      minWidth: 18,
+                      height: 18,
+                      background: '#dc2626',
+                      color: '#ffffff',
+                      borderRadius: 999,
+                      border: '2px solid #ffffff',
+                      fontSize: '0.65rem',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '0 4px',
+                      boxShadow: '0 1px 3px rgba(220,38,38,0.4)'
+                    }}
+                  >
+                    {unreviewedCount > 9 ? '9+' : unreviewedCount}
+                  </span>
+                )}
+              </button>
 
-            {/* User Profile Pill matching screenshot */}
+              {/* Notification Popover Dropdown */}
+              {isNotificationsOpen && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 10px)',
+                    right: 0,
+                    width: 370,
+                    maxWidth: '90vw',
+                    background: '#ffffff',
+                    borderRadius: 14,
+                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    border: '1px solid #e5e7eb',
+                    zIndex: 1400,
+                    overflow: 'hidden',
+                    animation: 'fadeIn 0.15s ease'
+                  }}
+                >
+                  {/* Dropdown Header */}
+                  <div style={{ padding: '0.9rem 1.15rem', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fafafa' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#111827' }}>
+                        Order Notifications
+                      </span>
+                      {unreviewedCount > 0 && (
+                        <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '0.15rem 0.5rem', borderRadius: 999, fontSize: '0.7rem', fontWeight: 800 }}>
+                          {unreviewedCount} New COD
+                        </span>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsNotificationsOpen(false)}
+                      style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: 2 }}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  {/* Dropdown List */}
+                  <div style={{ maxHeight: 380, overflowY: 'auto' }}>
+                    {pendingOrders.length === 0 ? (
+                      <div style={{ padding: '2.5rem 1rem', textAlign: 'center', color: '#6b7280' }}>
+                        <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#ecfdf5', color: '#047857', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem auto' }}>
+                          <CheckCircle2 size={20} />
+                        </div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111827' }}>
+                          All COD Orders Reviewed
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: 2 }}>
+                          No pending Cash on Delivery orders to review right now.
+                        </div>
+                      </div>
+                    ) : (
+                      pendingOrders.map(order => (
+                        <Link
+                          key={order.id}
+                          href={`/admin/orders?select=${order.id}`}
+                          onClick={() => setIsNotificationsOpen(false)}
+                          className="admin-notification-item"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '0.75rem',
+                            padding: '0.85rem 1.15rem',
+                            borderBottom: '1px solid #f3f4f6',
+                            textDecoration: 'none',
+                            color: 'inherit',
+                            background: order.status === 'pending_review' ? '#fdfcf9' : '#ffffff'
+                          }}
+                        >
+                          <div style={{
+                            width: 34,
+                            height: 34,
+                            borderRadius: 8,
+                            background: order.status === 'pending_review' ? '#fffbeb' : '#ecfdf5',
+                            color: order.status === 'pending_review' ? '#d97706' : '#047857',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                            marginTop: 2
+                          }}>
+                            <Package size={17} />
+                          </div>
+
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                              <span style={{ fontSize: '0.825rem', fontWeight: 800, color: '#111827' }}>
+                                {order.orderNumber}
+                              </span>
+                              <span style={{ fontSize: '0.68rem', color: '#9ca3af' }}>
+                                {formatNotificationTime(order.createdAt)}
+                              </span>
+                            </div>
+
+                            <div style={{ fontSize: '0.78rem', color: '#374151', fontWeight: 600 }}>
+                              {order.customer?.fullName || 'Customer'}
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.725rem', color: '#059669', marginTop: 2 }}>
+                              <Phone size={11} />
+                              <span>{order.customer?.phone || 'No phone'}</span>
+                              <span style={{ color: '#d1d5db' }}>•</span>
+                              <span style={{ color: '#6b7280' }}>{order.customer?.district || 'Colombo'}</span>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 5 }}>
+                              <span style={{
+                                fontSize: '0.675rem',
+                                fontWeight: 700,
+                                padding: '0.1rem 0.45rem',
+                                borderRadius: 4,
+                                background: order.status === 'pending_review' ? '#fef3c7' : '#ecfdf5',
+                                color: order.status === 'pending_review' ? '#92400e' : '#065f46'
+                              }}>
+                                {order.status === 'pending_review' ? 'Pending Call Verification' : (order.status || '').replace(/_/g, ' ')}
+                              </span>
+
+                              <span style={{ fontSize: '0.775rem', fontWeight: 800, color: '#111827' }}>
+                                Rs. {(order.total || 0).toLocaleString()} (COD)
+                              </span>
+                            </div>
+                          </div>
+                        </Link>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Dropdown Footer */}
+                  <div style={{ padding: '0.75rem 1rem', background: '#f9fafb', borderTop: '1px solid #f3f4f6', textAlign: 'center' }}>
+                    <Link
+                      href="/admin/orders"
+                      onClick={() => setIsNotificationsOpen(false)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        color: '#047857',
+                        textDecoration: 'none'
+                      }}
+                    >
+                      <span>Manage All COD Orders Queue</span>
+                      <ArrowRight size={13} />
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* User Profile Pill */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -388,10 +535,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 fontSize: '0.72rem',
                 fontWeight: 700
               }}>
-                {currentRole === 'owner' ? 'SA' : (adminUser?.email ? adminUser.email.slice(0, 2).toUpperCase() : 'AD')}
+                SA
               </div>
               <div className="admin-user-name" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1f2937' }}>
-                {currentRole === 'owner' ? 'Super Admin' : (ROLES.find(r => r.id === currentRole)?.label || 'Admin')}
+                Super Admin
               </div>
             </div>
 

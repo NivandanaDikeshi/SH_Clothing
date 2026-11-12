@@ -105,10 +105,10 @@ export const Header: React.FC = () => {
               GRADE A
             </span>
             <span style={{ fontWeight: 600, color: "#f4f4f5" }}>
-              පිටරටින් ආනයනය කරන ලද Quality 💯 ඇදුම් IMPORTED WEARS ✈️
+              පිටරටින් ආනයනය කරන ලද 100% Quality ඇදුම් (IMPORTED WEARS)
             </span>
             <span style={{ color: "var(--sh-gold)", fontWeight: 700 }}>
-              | WHOLESALE AVAILABLE | Cod available ✅
+              | WHOLESALE AVAILABLE | Cod available
             </span>
           </div>
 
@@ -132,7 +132,7 @@ export const Header: React.FC = () => {
                 border: "1px solid rgba(34, 197, 94, 0.35)",
               }}
             >
-              <span>📥 077-116-7406 Whatsapp හරහා ඇනවුම් භාරදෙන්න</span>
+              <span>077-116-7406 Whatsapp හරහා ඇනවුම් භාරදෙන්න</span>
             </a>
             <a
               href="https://chat.whatsapp.com/FDeXbtvBaRU4iNct1LlsXb"
@@ -152,7 +152,7 @@ export const Header: React.FC = () => {
                 border: "1px solid rgba(198, 156, 71, 0.35)",
               }}
             >
-              <span>👥 Join WhatsApp Group</span>
+              <span>Join WhatsApp Group</span>
             </a>
           </div>
         </div>

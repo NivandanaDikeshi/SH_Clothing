@@ -8,28 +8,31 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 const CATEGORIES = [
   {
     name: 'Tops',
-    subtitle: 'Heavyweight Tees, Shirts & Jackets',
+    subtitle: 'Crop Tops, Shirts & Jackets',
     slug: 'Tops',
-    description: '260 GSM export heavyweight combed cotton, resort linen shirts, and casual layerings.',
-    image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1000&q=80',
-    itemCount: 'Export Quality Curation'
+    description:
+      'Discover everyday essentials, from flattering crop tops and versatile shirts to easy layering pieces.',
+    image: 'images/category-tops.jpg',
+    itemCount: 'Export Quality Curation',
   },
   {
     name: 'Frocks',
     subtitle: 'Silk-Touch, Linen & Wrap Frocks',
     slug: 'Frocks',
-    description: 'Effortless silk-touch satin bias-cuts, tiered summer frocks, and chic celebration silhouettes.',
-    image: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=1000&q=80',
-    itemCount: 'Trending Social Drops'
+    description:
+      'Explore feminine styles, from soft, flowing frocks to relaxed linen designs and elegant wrap silhouettes.',
+    image: 'images/category-frocks.jpg',
+    itemCount: 'Trending Social Drops',
   },
   {
     name: 'Bottoms',
     subtitle: 'Tailored Trousers & Vintage Denim',
     slug: 'Bottoms',
-    description: 'High-waisted pleated trousers and durable rigid 90s vintage washed straight-leg denim.',
-    image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=1000&q=80',
-    itemCount: 'Wardrobe Staples'
-  }
+    description:
+      'Find your fit with polished tailored trousers and timeless denim made for everyday wear.',
+    image: 'images/category-bottoms.jpg',
+    itemCount: 'Wardrobe Staples',
+  },
 ];
 
 export const CategoryTiles: React.FC = () => {

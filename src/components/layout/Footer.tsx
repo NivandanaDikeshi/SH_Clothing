@@ -80,7 +80,7 @@ export const Footer: React.FC = () => {
                 </div>
               </Link>
               <p style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '1rem', color: '#9ca3af' }}>
-                පිටරටින් ආනයනය කරන ලද Quality 💯 ඇදුම් IMPORTED WEARS ✈️ [ GRADE A ]. Direct export overruns, wholesale supply &amp; Cash on Delivery islandwide.
+                පිටරටින් ආනයනය කරන ලද 100% Quality ඇදුම් (IMPORTED WEARS) [ GRADE A ]. Direct export overruns, wholesale supply &amp; Cash on Delivery islandwide.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
                 <a
@@ -102,7 +102,7 @@ export const Footer: React.FC = () => {
                     width: 'fit-content'
                   }}
                 >
-                  <span>👥 Join WhatsApp Group Community</span>
+                  <span>Join WhatsApp Group Community</span>
                   <ExternalLink size={12} />
                 </a>
               </div>
@@ -139,7 +139,7 @@ export const Footer: React.FC = () => {
                 <li><Link href="/shop?category=Tops" style={{ color: '#d4d4d8' }}>Tops &amp; Heavyweight Tees</Link></li>
                 <li><Link href="/shop?category=Frocks" style={{ color: '#d4d4d8' }}>Frocks &amp; Casual Dresses</Link></li>
                 <li><Link href="/shop?category=Bottoms" style={{ color: '#d4d4d8' }}>Bottoms &amp; Tailored Denim</Link></li>
-                <li><Link href="/sales" style={{ color: 'var(--sh-ruby)' }}>Sale Deals 🔥</Link></li>
+                <li><Link href="/sales" style={{ color: 'var(--sh-ruby)' }}>Sale Deals</Link></li>
               </ul>
             </div>
 
@@ -149,7 +149,7 @@ export const Footer: React.FC = () => {
                 Customer Care
               </h5>
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.85rem' }}>
-                <li><Link href="/track-order" style={{ color: 'var(--sh-gold)', fontWeight: 600 }}>🚚 Track Live COD Order</Link></li>
+                <li><Link href="/track-order" style={{ color: 'var(--sh-gold)', fontWeight: 600 }}>Track Live COD Order</Link></li>
                 <li><Link href="/shipping-returns" style={{ color: '#d4d4d8' }}>Shipping Rates & Delivery Times</Link></li>
                 <li><Link href="/shipping-returns#returns" style={{ color: '#d4d4d8' }}>Cash on Delivery & Exchanges</Link></li>
                 <li><Link href="/about" style={{ color: '#d4d4d8' }}>About SH Clothing</Link></li>
@@ -179,7 +179,7 @@ export const Footer: React.FC = () => {
                   </a>
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--sh-gold)', fontWeight: 600 }}>
-                  📥 Whatsapp හරහා ඇනවුම් භාරදෙන්න • Wholesale Available
+                  Whatsapp හරහා ඇනවුම් භාරදෙන්න • Wholesale Available
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                   <Mail size={16} style={{ color: 'var(--sh-gold)' }} />

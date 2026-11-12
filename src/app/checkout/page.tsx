@@ -84,7 +84,7 @@ export default function CheckoutPage() {
     }
   }, [user]);
 
-  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'card_future'>('cod');
+  const [paymentMethod] = useState<'cod'>('cod');
   const [agreedToTerms, setAgreedToTerms] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -373,69 +373,61 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* 3. Payment Method */}
+            {/* 3. Payment Method: Exclusively Cash on Delivery (COD) */}
             <div style={{ background: '#ffffff', padding: '1.75rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--sh-border)', boxShadow: 'var(--shadow-sm)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
-                <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--sh-black)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
-                  3
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--sh-black)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
+                    3
+                  </div>
+                  <h3 style={{ fontSize: '1.15rem', margin: 0 }}>Payment Method</h3>
                 </div>
-                <h3 style={{ fontSize: '1.15rem', margin: 0 }}>Payment Method</h3>
+                <span style={{ fontSize: '0.72rem', background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '0.2rem 0.55rem', borderRadius: 999, fontWeight: 700 }}>
+                  100% Cash on Delivery Only
+                </span>
               </div>
 
-              {/* Cash on Delivery option (Active) */}
+              {/* Cash on Delivery option (Exclusively Supported) */}
               <div
                 style={{
-                  border: '2px solid var(--sh-black)',
+                  border: '2px solid #047857',
                   borderRadius: 'var(--radius-md)',
                   padding: '1.25rem',
-                  background: '#fcfbf9',
-                  marginBottom: '1rem',
+                  background: '#f0fdf4',
                   position: 'relative'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', fontWeight: 700, fontSize: '1rem', color: 'var(--sh-black)' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', fontWeight: 800, fontSize: '1.05rem', color: '#064e3b' }}>
                     <input
                       type="radio"
                       name="paymentMethod"
                       value="cod"
-                      checked={paymentMethod === 'cod'}
-                      onChange={() => setPaymentMethod('cod')}
-                      style={{ accentColor: 'var(--sh-black)', width: 18, height: 18 }}
+                      checked={true}
+                      readOnly
+                      style={{ accentColor: '#047857', width: 20, height: 20 }}
                     />
-                    <span>Cash on Delivery (COD)</span>
+                    <span>Cash on Delivery (COD) — Island-wide</span>
                   </label>
-                  <span className="badge-cod">Guaranteed</span>
-                </div>
-                <p style={{ margin: '0.6rem 0 0 2rem', fontSize: '0.85rem', color: 'var(--sh-text-secondary)', lineHeight: 1.5 }}>
-                  Pay cash directly to the courier agent when your package is delivered to your doorstep. No advance payment or card details required.
-                </p>
-              </div>
-
-              {/* Future Gateway Integration Tab (Card / PayHere / Stripe) */}
-              <div
-                style={{
-                  border: '1px dashed var(--sh-border)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '1.25rem',
-                  background: '#fafafa',
-                  opacity: 0.8
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <CreditCard size={18} style={{ color: 'var(--sh-text-muted)' }} />
-                    <span style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--sh-text-muted)' }}>
-                      Visa / Mastercard / Koko Pay / Mintpay
-                    </span>
-                  </div>
-                  <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '0.2rem 0.5rem', background: '#e5e7eb', color: '#4b5563', borderRadius: 4 }}>
-                    Coming Soon (Gateway Modular Architecture)
+                  <span style={{ background: '#047857', color: '#ffffff', padding: '0.25rem 0.65rem', borderRadius: 999, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.04em' }}>
+                    VERIFIED COD
                   </span>
                 </div>
-                <p style={{ margin: '0.5rem 0 0 1.9rem', fontSize: '0.775rem', color: 'var(--sh-text-muted)' }}>
-                  Our checkout architecture is modularly primed for direct PayHere / Stripe gateway integration in Phase 2.
+                <p style={{ margin: '0.65rem 0 0 2rem', fontSize: '0.85rem', color: '#065f46', lineHeight: 1.5 }}>
+                  Pay cash directly to the courier officer upon doorstep delivery across Sri Lanka. No card details or online transfers required. Inspect your Grade-A quality parcel before making payment.
                 </p>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginTop: '0.85rem', marginLeft: '2rem', flexWrap: 'wrap', fontSize: '0.75rem', color: '#047857', fontWeight: 600 }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <ShieldCheck size={14} /> Island-wide Doorstep Delivery
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <Truck size={14} /> Domex &amp; Koombiyo Logistics
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <Phone size={14} /> WhatsApp Support: 077-116-7406
+                  </span>
+                </div>
               </div>
             </div>
 

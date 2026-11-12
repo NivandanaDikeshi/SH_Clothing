@@ -18,7 +18,7 @@ interface LookItem {
 const LOOKS: LookItem[] = [
   {
     id: 'look-1',
-    image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=700&q=80',
+    image: 'images/look-1.jpg',
     title: 'Emerald Silk Bias-Cut Frock',
     category: 'frocks',
     tag: 'TikTok Viral Drop',
@@ -27,7 +27,7 @@ const LOOKS: LookItem[] = [
   },
   {
     id: 'look-2',
-    image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=700&q=80',
+    image: 'images/look-2.jpg',
     title: 'Resort Linen Camp Collar Shirt',
     category: 'tops',
     tag: 'Summer Edit',
@@ -36,7 +36,7 @@ const LOOKS: LookItem[] = [
   },
   {
     id: 'look-3',
-    image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=700&q=80',
+    image: 'images/look-3.jpg',
     title: 'Heavyweight 260GSM Boxy Tee',
     category: 'tops',
     tag: 'Streetwear Staple',
@@ -45,7 +45,7 @@ const LOOKS: LookItem[] = [
   },
   {
     id: 'look-4',
-    image: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=700&q=80',
+    image: 'images/look-4.jpg',
     title: 'Flora Breeze Tiered Summer Frock',
     category: 'frocks',
     tag: 'Exclusive Surplus',
@@ -54,7 +54,7 @@ const LOOKS: LookItem[] = [
   },
   {
     id: 'look-5',
-    image: 'https://images.unsplash.com/photo-1509551388413-e18d0ac5d495?auto=format&fit=crop&w=700&q=80',
+    image: 'images/look-5.jpg',
     title: 'High-Waist Tailored Pleated Trouser',
     category: 'bottoms',
     tag: 'Office to Evening',
@@ -63,7 +63,7 @@ const LOOKS: LookItem[] = [
   },
   {
     id: 'look-6',
-    image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=700&q=80',
+    image: 'images/look-6.jpg',
     title: '90s Vintage Washed Straight Denim',
     category: 'bottoms',
     tag: 'Wardrobe Classic',
@@ -72,7 +72,7 @@ const LOOKS: LookItem[] = [
   },
   {
     id: 'look-7',
-    image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=700&q=80',
+    image: 'images/look-7.jpg',
     title: 'Cowl Neck Cocktail Slip Frock',
     category: 'frocks',
     tag: 'Night Out Glam',
@@ -81,7 +81,7 @@ const LOOKS: LookItem[] = [
   },
   {
     id: 'look-8',
-    image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=700&q=80',
+    image: 'images/look-8.jpg',
     title: 'Washed Charcoal Graphic Heavy Tee',
     category: 'tops',
     tag: 'TikTok Top Pick',

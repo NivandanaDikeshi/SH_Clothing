@@ -340,17 +340,6 @@ export default function AdminRolesPage() {
                     >
                       <Eye size={14} />
                     </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleOpenEdit(role)}
-                      title="Edit Permissions"
-                      className="btn-secondary"
-                      style={{ padding: '0.35rem 0.55rem', fontSize: '0.75rem' }}
-                    >
-                      <Key size={14} />
-                    </button>
-
                     <button
                       type="button"
                       onClick={() => handleOpenEdit(role)}
