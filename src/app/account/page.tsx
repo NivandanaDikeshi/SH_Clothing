@@ -23,7 +23,12 @@ import {
   ExternalLink,
   Edit3,
   Save,
-  Check
+  Check,
+  Camera,
+  Upload,
+  Trash2,
+  X,
+  Sparkles
 } from 'lucide-react';
 
 const SRI_LANKA_DISTRICTS = [
@@ -71,6 +76,48 @@ export default function AccountPage() {
     district: 'Colombo'
   });
   const [addressSavedNotice, setAddressSavedNotice] = useState(false);
+
+  // Profile picture editing state
+  const [isEditingAvatar, setIsEditingAvatar] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string>('');
+  const [avatarSavedNotice, setAvatarSavedNotice] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user?.avatar) {
+      setAvatarPreview(user.avatar);
+    }
+  }, [user]);
+
+  const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) {
+      setAvatarError('Image size exceeds 4MB. Please choose a smaller photo.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result as string);
+      setAvatarError(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveAvatar = () => {
+    updateProfile({ avatar: avatarPreview || undefined });
+    setIsEditingAvatar(false);
+    setAvatarSavedNotice(true);
+    setTimeout(() => setAvatarSavedNotice(false), 3500);
+  };
+
+  const handleRemoveAvatar = () => {
+    setAvatarPreview('');
+    updateProfile({ avatar: undefined });
+    setIsEditingAvatar(false);
+    setAvatarSavedNotice(true);
+    setTimeout(() => setAvatarSavedNotice(false), 3500);
+  };
 
   // Initialize form state when user loads
   useEffect(() => {
@@ -231,6 +278,14 @@ export default function AccountPage() {
   return (
     <div style={{ padding: '3rem 0 6rem 0', background: 'var(--sh-cream)', minHeight: '85vh' }}>
       <div className="container" style={{ maxWidth: 1040 }}>
+        {/* Profile Notifications */}
+        {avatarSavedNotice && (
+          <div style={{ background: '#ecfdf5', border: '1px solid #10b981', color: '#065f46', padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.875rem', marginBottom: '1.25rem' }}>
+            <Check size={18} />
+            Profile picture updated and saved successfully!
+          </div>
+        )}
+
         {/* Profile Card Header */}
         <div
           style={{
@@ -244,23 +299,65 @@ export default function AccountPage() {
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-              <div
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #181a1f 0%, #0d0f12 100%)',
-                  color: 'var(--sh-gold)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.6rem',
-                  fontWeight: 800,
-                  border: '2px solid var(--sh-gold)',
-                  flexShrink: 0
-                }}
-              >
-                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+              {/* Interactive Profile Picture Container */}
+              <div style={{ position: 'relative' }}>
+                <div
+                  style={{
+                    width: 72,
+                    height: 72,
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #181a1f 0%, #0d0f12 100%)',
+                    color: 'var(--sh-gold)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.8rem',
+                    fontWeight: 800,
+                    border: '3px solid var(--sh-gold)',
+                    flexShrink: 0,
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 14px rgba(0,0,0,0.15)'
+                  }}
+                >
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <span>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</span>
+                  )}
+                </div>
+
+                {/* Edit Photo Trigger Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAvatarPreview(user.avatar || '');
+                    setAvatarError(null);
+                    setIsEditingAvatar(true);
+                  }}
+                  title="Change Profile Picture"
+                  style={{
+                    position: 'absolute',
+                    bottom: -2,
+                    right: -2,
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    background: '#047857',
+                    color: '#ffffff',
+                    border: '2px solid #ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                  }}
+                >
+                  <Camera size={14} />
+                </button>
               </div>
 
               <div>
@@ -271,6 +368,25 @@ export default function AccountPage() {
                   <span style={{ fontSize: '0.68rem', background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '0.1rem 0.5rem', borderRadius: 999, fontWeight: 700 }}>
                     SH VIP Member
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAvatarPreview(user.avatar || '');
+                      setAvatarError(null);
+                      setIsEditingAvatar(true);
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--sh-text-secondary)',
+                      textDecoration: 'underline',
+                      fontSize: '0.75rem',
+                      cursor: 'pointer',
+                      padding: 0
+                    }}
+                  >
+                    Edit Photo
+                  </button>
                 </div>
 
                 <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', margin: '0.25rem 0', color: 'var(--sh-black)' }}>
@@ -851,7 +967,7 @@ export default function AccountPage() {
               </h4>
 
               <p style={{ fontSize: '0.8rem', color: '#d1d5db', lineHeight: 1.5, margin: '0 0 1rem 0' }}>
-                පිටරටින් ආනයනය කරන ලද Quality 💯 ඇදුම්. Join our VIP group for first-access drops, wholesale lots, and instant order tracking help.
+                පිටරටින් ආනයනය කරන ලද 100% Quality ඇදුම්. Join our VIP group for first-access drops, wholesale lots, and instant order tracking help.
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -904,6 +1020,221 @@ export default function AccountPage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Picture Modal */}
+      {isEditingAvatar && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            background: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(5px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+            animation: 'fadeIn 0.15s ease'
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsEditingAvatar(false);
+          }}
+        >
+          <div
+            style={{
+              width: '100%',
+              maxWidth: 460,
+              background: '#ffffff',
+              borderRadius: 16,
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              overflow: 'hidden',
+              border: '1px solid #e5e7eb'
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{ padding: '1.15rem 1.5rem', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fafafa' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#111827' }}>
+                  Edit Profile Picture
+                </h3>
+                <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.775rem', color: '#6b7280' }}>
+                  Upload a photo from your computer or choose a stylish avatar.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditingAvatar(false)}
+                style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: 4 }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', alignItems: 'center' }}>
+              {/* Preview Circle */}
+              <div
+                style={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #181a1f 0%, #0d0f12 100%)',
+                  color: 'var(--sh-gold)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '2.4rem',
+                  fontWeight: 800,
+                  border: '3px solid var(--sh-gold)',
+                  overflow: 'hidden',
+                  boxShadow: '0 6px 18px rgba(0,0,0,0.15)'
+                }}
+              >
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt="Preview"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <span>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</span>
+                )}
+              </div>
+
+              {avatarError && (
+                <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', color: '#dc2626', padding: '0.5rem 0.85rem', borderRadius: 8, fontSize: '0.775rem', width: '100%', textAlign: 'center' }}>
+                  {avatarError}
+                </div>
+              )}
+
+              {/* Upload from Device */}
+              <div style={{ width: '100%', textAlign: 'center' }}>
+                <input
+                  type="file"
+                  id="account-avatar-file-input"
+                  accept="image/png, image/jpeg, image/webp"
+                  style={{ display: 'none' }}
+                  onChange={handleAvatarFileChange}
+                />
+                <label
+                  htmlFor="account-avatar-file-input"
+                  className="btn-secondary"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.45rem',
+                    padding: '0.65rem 1.25rem',
+                    fontSize: '0.825rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    width: '100%'
+                  }}
+                >
+                  <Upload size={15} />
+                  <span>Upload Photo from Device</span>
+                </label>
+                <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.35rem' }}>
+                  Supports JPG, PNG or WEBP (Max 4MB)
+                </div>
+              </div>
+
+              {/* Preset VIP Avatars */}
+              <div style={{ width: '100%' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#4b5563', marginBottom: '0.5rem', textAlign: 'left' }}>
+                  Or Choose a Luxury Avatar:
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem' }}>
+                  {[
+                    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+                    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+                    'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
+                    'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80',
+                    'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=80'
+                  ].map((presetUrl, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        setAvatarPreview(presetUrl);
+                        setAvatarError(null);
+                      }}
+                      style={{
+                        width: '100%',
+                        aspectRatio: '1',
+                        borderRadius: '50%',
+                        overflow: 'hidden',
+                        padding: 0,
+                        border: avatarPreview === presetUrl ? '3px solid #047857' : '2px solid #e5e7eb',
+                        cursor: 'pointer',
+                        transform: avatarPreview === presetUrl ? 'scale(1.08)' : 'scale(1)',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <img src={presetUrl} alt={`Preset ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '0.65rem', width: '100%', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={handleSaveAvatar}
+                  className="btn-primary"
+                  style={{
+                    flex: 1,
+                    padding: '0.65rem 1rem',
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.4rem',
+                    background: '#047857',
+                    borderColor: '#047857'
+                  }}
+                >
+                  <Save size={15} />
+                  <span>Save Profile Picture</span>
+                </button>
+
+                {avatarPreview && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    style={{
+                      padding: '0.65rem 0.85rem',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      background: '#fef2f2',
+                      border: '1px solid #fee2e2',
+                      color: '#dc2626',
+                      borderRadius: 8,
+                      cursor: 'pointer'
+                    }}
+                    title="Remove custom picture"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setIsEditingAvatar(false)}
+                  className="btn-secondary"
+                  style={{ padding: '0.65rem 1rem', fontSize: '0.85rem' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx global>{`
         @media (max-width: 860px) {

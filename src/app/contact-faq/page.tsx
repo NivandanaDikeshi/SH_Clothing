@@ -136,15 +136,15 @@ export default function ContactAndFaqPage() {
               {/* Wholesale & Grade A Badge */}
               <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 'var(--radius-md)', padding: '0.75rem 1rem', marginBottom: '1.25rem' }}>
                 <p style={{ margin: 0, fontSize: '0.825rem', fontWeight: 700, color: '#92400e', lineHeight: 1.4 }}>
-                  පිටරටින් ආනයනය කරන ලද Quality 💯 ඇදුම් IMPORTED WEARS ✈️ [ GRADE A ]
+                  පිටරටින් ආනයනය කරන ලද 100% Quality ඇදුම් (IMPORTED WEARS) [ GRADE A ]
                 </p>
                 <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', fontWeight: 600, color: '#047857' }}>
-                  WHOLESALE AVAILABLE | Cod available ✅
+                  WHOLESALE AVAILABLE | Cod available
                 </p>
               </div>
 
               <p style={{ fontSize: '0.875rem', color: 'var(--sh-text-secondary)', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-                077-116-7406 Whatsapp හරහා ඇනවුම් භාරදෙන්න 📥. Chat directly with our Colombo warehouse team for sizing suggestions, wholesale lots, or instant COD orders.
+                077-116-7406 Whatsapp හරහා ඇනවුම් භාරදෙන්න. Chat directly with our Colombo warehouse team for sizing suggestions, wholesale lots, or instant COD orders.
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>

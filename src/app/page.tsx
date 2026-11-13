@@ -16,6 +16,7 @@ export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [emailSub, setEmailSub] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [alreadyClaimedNotice, setAlreadyClaimedNotice] = useState<string | null>(null);
 
   useEffect(() => {
     setProducts(getStoredProducts());
@@ -28,7 +29,30 @@ export default function HomePage() {
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
-    if (emailSub.trim()) {
+    setAlreadyClaimedNotice(null);
+    const cleanEmail = emailSub.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) return;
+
+    try {
+      const STORAGE_KEY = 'sh_drop_alerts_claimed_emails_v1';
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const claimedList: string[] = raw ? JSON.parse(raw) : [];
+
+      // Check if this email has ALREADY claimed the 10% offer
+      if (claimedList.includes(cleanEmail)) {
+        setAlreadyClaimedNotice(
+          `This email address (${cleanEmail}) has already claimed the 10% Off Early Drop offer. Each email can receive this offer only once.`
+        );
+        return;
+      }
+
+      // Add to claimed list (one email = one time only)
+      claimedList.push(cleanEmail);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(claimedList));
+
+      setSubscribed(true);
+      setEmailSub('');
+    } catch {
       setSubscribed(true);
       setEmailSub('');
     }
@@ -140,28 +164,44 @@ export default function HomePage() {
             Export surplus collections sell out rapidly. Subscribe with your email or follow our TikTok to receive private alerts 1 hour before viral drops go public.
           </p>
 
+          {alreadyClaimedNotice && (
+            <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '1rem 1.25rem', borderRadius: 'var(--radius-lg)', color: '#92400e', marginBottom: '1.25rem', fontSize: '0.875rem', textAlign: 'center' }}>
+              <div style={{ fontWeight: 700, marginBottom: '0.35rem' }}>Notice: Single-Use Offer</div>
+              <div>{alreadyClaimedNotice}</div>
+              <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#b45309' }}>
+                Your code is still active: <strong>TIKTOK10</strong> (10% off Cash on Delivery).
+              </div>
+            </div>
+          )}
+
           {subscribed ? (
             <div style={{ background: 'var(--sh-emerald-bg)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '1.25rem', borderRadius: 'var(--radius-lg)', color: 'var(--sh-emerald)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '1rem' }}>
                 <CheckCircle2 size={20} /> Welcome to the SH VIP Circle!
               </div>
               <p style={{ fontSize: '0.85rem', margin: '0.35rem 0 0 0' }}>
-                Use promo code <strong>TIKTOK10</strong> at checkout for 10% off your first Cash on Delivery order.
+                Use promo code <strong>TIKTOK10</strong> at checkout for 10% off your Cash on Delivery order.
               </p>
+              <div style={{ fontSize: '0.75rem', color: '#047857', marginTop: '0.35rem' }}>
+                *This offer has been activated for your email address (1-time use).
+              </div>
             </div>
           ) : (
-            <form onSubmit={handleSubscribe} style={{ display: 'flex', gap: '0.5rem', maxWidth: 480, margin: '0 auto' }}>
+            <form onSubmit={handleSubscribe} style={{ display: 'flex', gap: '0.5rem', maxWidth: 480, margin: '0 auto', flexWrap: 'wrap' }}>
               <input
                 type="email"
                 required
                 placeholder="Enter your email address..."
                 value={emailSub}
-                onChange={(e) => setEmailSub(e.target.value)}
+                onChange={(e) => {
+                  setEmailSub(e.target.value);
+                  if (alreadyClaimedNotice) setAlreadyClaimedNotice(null);
+                }}
                 className="form-input"
-                style={{ flex: 1, borderRadius: 'var(--radius-full)' }}
+                style={{ flex: '1 1 240px', borderRadius: 'var(--radius-full)' }}
               />
               <button type="submit" className="btn-primary" style={{ flexShrink: 0 }}>
-                Join VIP Drops
+                Join VIP Drops &amp; Claim 10%
               </button>
             </form>
           )}

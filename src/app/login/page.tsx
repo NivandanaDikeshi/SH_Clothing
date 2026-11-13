@@ -25,7 +25,7 @@ function LoginFormContent() {
       ? requestedRedirect
       : "/shop";
 
-  const { login } = useAuth();
+  const { user, isAuthenticated, login, logout } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -246,60 +246,199 @@ function LoginFormContent() {
               minWidth: 0,
             }}
           >
-            <div style={{ marginBottom: "1.75rem" }}>
-              <span
-                style={{
-                  fontSize: "0.75rem",
-                  fontWeight: 700,
-                  letterSpacing: "0.15em",
-                  textTransform: "uppercase",
-                  color: "var(--sh-gold, #cda143)",
-                }}
-              >
-                Welcome Back
-              </span>
-              <h1
-                style={{
-                  fontFamily: "var(--font-serif, Georgia, serif)",
-                  fontSize: "2rem",
-                  lineHeight: 1.2,
-                  margin: "0.35rem 0 0.5rem",
-                  color: "var(--sh-black, #18181b)",
-                }}
-              >
-                Sign In to Your Account
-              </h1>
-              <p
-                style={{
-                  fontSize: "0.875rem",
-                  color: "var(--sh-text-secondary, #6b7280)",
-                  margin: 0,
-                  lineHeight: 1.5,
-                }}
-              >
-                Enter your credentials to access your orders and profile.
-              </p>
-            </div>
-
-            {error && (
+            {isAuthenticated && user ? (
               <div
-                role="alert"
-                aria-live="polite"
                 style={{
-                  background: "var(--sh-ruby-bg, #fff1f2)",
-                  color: "var(--sh-ruby, #be123c)",
-                  padding: "0.75rem 1rem",
-                  borderRadius: "var(--radius-md, 10px)",
-                  fontSize: "0.825rem",
-                  lineHeight: 1.5,
-                  marginBottom: "1.25rem",
-                  border: "1px solid #fecdd3",
-                  overflowWrap: "anywhere",
+                  background: '#f8fafc',
+                  border: '1.5px solid #e2e8f0',
+                  borderRadius: 14,
+                  padding: '2rem 1.5rem',
+                  textAlign: 'center',
                 }}
               >
-                {error}
+                {user.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.name || "Customer"}
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      border: '3px solid var(--sh-gold)',
+                      margin: '0 auto 1rem',
+                      display: 'block'
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: '50%',
+                      background: 'var(--sh-gold)',
+                      color: '#ffffff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.5rem',
+                      fontWeight: 800,
+                      margin: '0 auto 1rem',
+                    }}
+                  >
+                    {user.name?.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                )}
+
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#b45309', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  Logged In &amp; Active
+                </div>
+                <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', margin: '0.35rem 0 0.25rem', color: '#0f172a' }}>
+                  {user.name}
+                </h2>
+                <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '0 0 1.5rem' }}>
+                  {user.email} • Your customer session is active.
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                  <Link
+                    href={redirectUrl}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      background: 'var(--sh-black)',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '0.9rem',
+                      padding: '0.85rem 1.25rem',
+                      borderRadius: 10,
+                      textDecoration: 'none'
+                    }}
+                  >
+                    <span>Enter System ({redirectUrl === '/account' ? 'My Account' : 'Shop Collections'})</span>
+                    <ArrowRight size={16} />
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => logout()}
+                    style={{
+                      background: '#ffffff',
+                      border: '1px solid #cbd5e1',
+                      color: '#475569',
+                      fontWeight: 600,
+                      fontSize: '0.825rem',
+                      padding: '0.65rem',
+                      borderRadius: 10,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Switch Account / Sign Out
+                  </button>
+                </div>
               </div>
-            )}
+            ) : (
+              <>
+                <div style={{ marginBottom: "1.75rem" }}>
+                  <span
+                    style={{
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      letterSpacing: "0.15em",
+                      textTransform: "uppercase",
+                      color: "var(--sh-gold, #cda143)",
+                    }}
+                  >
+                    Welcome Back
+                  </span>
+                  <h1
+                    style={{
+                      fontFamily: "var(--font-serif, Georgia, serif)",
+                      fontSize: "2rem",
+                      lineHeight: 1.2,
+                      margin: "0.35rem 0 0.5rem",
+                      color: "var(--sh-black, #18181b)",
+                    }}
+                  >
+                    Sign In to Your Account
+                  </h1>
+                  <p
+                    style={{
+                      fontSize: "0.875rem",
+                      color: "var(--sh-text-secondary, #6b7280)",
+                      margin: 0,
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    Only registered customers can access the system.
+                  </p>
+                </div>
+
+                {error && (
+                  error.toLowerCase().includes('not registered') ? (
+                    <div
+                      role="alert"
+                      aria-live="polite"
+                      style={{
+                        background: '#fffbeb',
+                        color: '#92400e',
+                        padding: '1.15rem',
+                        borderRadius: 12,
+                        fontSize: '0.85rem',
+                        lineHeight: 1.5,
+                        marginBottom: '1.25rem',
+                        border: '1.5px solid #fde68a',
+                      }}
+                    >
+                      <div style={{ fontWeight: 800, fontSize: '0.92rem', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                        <Sparkles size={17} color="#d97706" />
+                        <span>Registration Required to Access the System</span>
+                      </div>
+                      <div style={{ marginBottom: '0.85rem', color: '#78350f' }}>
+                        {error}
+                      </div>
+                      <Link
+                        href={`/register?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(redirectUrl)}`}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.4rem',
+                          background: '#d97706',
+                          color: '#ffffff',
+                          fontWeight: 700,
+                          fontSize: '0.825rem',
+                          padding: '0.55rem 1.15rem',
+                          borderRadius: 8,
+                          textDecoration: 'none',
+                          boxShadow: '0 2px 4px rgba(217,119,6,0.3)'
+                        }}
+                      >
+                        <span>Register Free &amp; Access System</span>
+                        <ArrowRight size={15} />
+                      </Link>
+                    </div>
+                  ) : (
+                    <div
+                      role="alert"
+                      aria-live="polite"
+                      style={{
+                        background: "var(--sh-ruby-bg, #fff1f2)",
+                        color: "var(--sh-ruby, #be123c)",
+                        padding: "0.75rem 1rem",
+                        borderRadius: "var(--radius-md, 10px)",
+                        fontSize: "0.825rem",
+                        lineHeight: 1.5,
+                        marginBottom: "1.25rem",
+                        border: "1px solid #fecdd3",
+                        overflowWrap: "anywhere",
+                      }}
+                    >
+                      {error}
+                    </div>
+                  )
+                )}
 
             <form
               onSubmit={handleSubmit}
@@ -499,29 +638,31 @@ function LoginFormContent() {
               </button>
             </form>
 
-            <div
-              style={{
-                textAlign: "center",
-                marginTop: "1.75rem",
-                paddingTop: "1.25rem",
-                borderTop: "1px solid var(--sh-border, #e5e7eb)",
-                fontSize: "0.85rem",
-                color: "var(--sh-text-secondary, #6b7280)",
-                lineHeight: 1.6,
-              }}
-            >
-              Don&apos;t have an account yet?{" "}
-              <Link
-                href="/register"
-                style={{
-                  color: "var(--sh-ruby, #be123c)",
-                  fontWeight: 700,
-                  textDecoration: "underline",
-                }}
-              >
-                Register Free Here
-              </Link>
-            </div>
+                <div
+                  style={{
+                    textAlign: "center",
+                    marginTop: "1.75rem",
+                    paddingTop: "1.25rem",
+                    borderTop: "1px solid var(--sh-border, #e5e7eb)",
+                    fontSize: "0.85rem",
+                    color: "var(--sh-text-secondary, #6b7280)",
+                    lineHeight: 1.6,
+                  }}
+                >
+                  Don&apos;t have an account yet?{" "}
+                  <Link
+                    href={`/register?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(redirectUrl)}`}
+                    style={{
+                      color: "var(--sh-ruby, #be123c)",
+                      fontWeight: 700,
+                      textDecoration: "underline",
+                    }}
+                  >
+                    Register Free Here
+                  </Link>
+                </div>
+              </>
+            )}
           </section>
         </div>
       </main>

@@ -404,22 +404,37 @@ export const Header: React.FC = () => {
                     cursor: "pointer",
                   }}
                 >
-                  <span
-                    style={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: "50%",
-                      background: "var(--sh-gold)",
-                      color: "#ffffff",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "0.75rem",
-                      fontWeight: 800,
-                    }}
-                  >
-                    {user?.name?.charAt(0).toUpperCase() || "U"}
-                  </span>
+                  {user?.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user?.name || "User"}
+                      style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        border: "1.5px solid var(--sh-gold)",
+                        display: "block"
+                      }}
+                    />
+                  ) : (
+                    <span
+                      style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: "50%",
+                        background: "var(--sh-gold)",
+                        color: "#ffffff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "0.75rem",
+                        fontWeight: 800,
+                      }}
+                    >
+                      {user?.name?.charAt(0).toUpperCase() || "U"}
+                    </span>
+                  )}
                   <span
                     style={{
                       maxWidth: 110,
@@ -469,45 +484,81 @@ export const Header: React.FC = () => {
                     >
                       <div
                         style={{
-                          padding: "0.5rem 0.75rem",
+                          padding: "0.6rem 0.75rem",
                           borderBottom: "1px solid var(--sh-border)",
                           marginBottom: "0.4rem",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.65rem",
                         }}
                       >
-                        <div
-                          style={{
-                            fontSize: "0.7rem",
-                            color: "var(--sh-text-muted)",
-                            textTransform: "uppercase",
-                            letterSpacing: "0.05em",
-                          }}
-                        >
-                          Signed in as
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "0.85rem",
-                            fontWeight: 700,
-                            color: "var(--sh-black)",
-                            marginTop: 2,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {user?.name || "Customer"}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "0.75rem",
-                            color: "var(--sh-text-secondary)",
-                            marginTop: 1,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {user?.email || ""}
+                        {user?.avatar ? (
+                          <img
+                            src={user.avatar}
+                            alt={user?.name || "Customer"}
+                            style={{
+                              width: 38,
+                              height: 38,
+                              borderRadius: "50%",
+                              objectFit: "cover",
+                              border: "2px solid var(--sh-gold)",
+                              flexShrink: 0,
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: 38,
+                              height: 38,
+                              borderRadius: "50%",
+                              background: "var(--sh-gold)",
+                              color: "#ffffff",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontWeight: 800,
+                              fontSize: "0.95rem",
+                              flexShrink: 0,
+                            }}
+                          >
+                            {user?.name?.charAt(0).toUpperCase() || "U"}
+                          </div>
+                        )}
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div
+                            style={{
+                              fontSize: "0.68rem",
+                              color: "var(--sh-text-muted)",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.05em",
+                            }}
+                          >
+                            Signed in as
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "0.85rem",
+                              fontWeight: 700,
+                              color: "var(--sh-black)",
+                              marginTop: 1,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {user?.name || "Customer"}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "0.75rem",
+                              color: "var(--sh-text-secondary)",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {user?.email || ""}
+                          </div>
                         </div>
                       </div>
 
@@ -724,21 +775,37 @@ export const Header: React.FC = () => {
                       marginBottom: "0.6rem",
                     }}
                   >
-                    <div
-                      style={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: "50%",
-                        background: "var(--sh-gold)",
-                        color: "#ffffff",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: 800,
-                      }}
-                    >
-                      {user?.name?.charAt(0).toUpperCase() || "U"}
-                    </div>
+                    {user?.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt={user?.name || "Customer"}
+                        style={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          border: "2px solid var(--sh-gold)",
+                          flexShrink: 0,
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: "50%",
+                          background: "var(--sh-gold)",
+                          color: "#ffffff",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: 800,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {user?.name?.charAt(0).toUpperCase() || "U"}
+                      </div>
+                    )}
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontWeight: 700, fontSize: "0.875rem" }}>
                         {user?.name || "Customer"}

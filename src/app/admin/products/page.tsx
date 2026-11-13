@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { getStoredProducts, saveStoredProducts, logAuditEvent, deleteProduct } from '@/lib/store';
+import { getStoredProducts, saveStoredProducts, logAuditEvent, deleteProduct, initRealtimeFirestoreSync } from '@/lib/store';
 import { DeleteConfirmModal } from '@/components/admin/DeleteConfirmModal';
 import { Product, ProductStatus, ProductVariant } from '@/types';
 import {
@@ -98,8 +98,12 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     loadProducts();
+    const cleanup = initRealtimeFirestoreSync();
     window.addEventListener('sh_products_updated', loadProducts);
-    return () => window.removeEventListener('sh_products_updated', loadProducts);
+    return () => {
+      window.removeEventListener('sh_products_updated', loadProducts);
+      if (cleanup) cleanup();
+    };
   }, []);
 
   const loadProducts = () => {

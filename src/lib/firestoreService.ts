@@ -9,7 +9,8 @@ import {
   query,
   orderBy,
   serverTimestamp,
-  writeBatch
+  writeBatch,
+  onSnapshot
 } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from './firebase';
 import { Product, Order, StockAdjustment, AuditLog, OrderStatus, CustomRole, CustomerDetails } from '@/types';
@@ -318,6 +319,190 @@ export async function fetchOrdersFromFirestore(): Promise<Order[] | null> {
   } catch (error) {
     console.warn('Failed to fetch orders from Firestore:', error);
     return null;
+  }
+}
+
+/**
+ * Subscribe to real-time order stream from Cloud Firestore
+ */
+export function subscribeToOrdersFirestore(
+  onUpdate: (orders: Order[]) => void,
+  onError?: (err: any) => void
+): () => void {
+  if (!db) {
+    return () => {};
+  }
+
+  try {
+    const colRef = collection(db, ORDERS_COLLECTION);
+    const unsubscribe = onSnapshot(
+      colRef,
+      (snapshot) => {
+        const orders: Order[] = [];
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          if (data && (data.id || docSnap.id) && (data.orderNumber || data.customer)) {
+            const orderNumber = data.orderNumber || `SH-${docSnap.id.slice(0, 8).toUpperCase()}`;
+            const customer: CustomerDetails = {
+              fullName: data.customer?.fullName || data.customer?.name || data.name || 'Customer',
+              phone: data.customer?.phone || data.phone || '',
+              email: data.customer?.email || data.email || '',
+              address: data.customer?.address || data.address || '',
+              city: data.customer?.city || data.city || 'Colombo',
+              district: data.customer?.district || data.district || 'Colombo',
+              postalCode: data.customer?.postalCode || '',
+              notes: data.customer?.notes || data.customer?.deliveryNotes || data.notes || ''
+            };
+
+            orders.push({
+              id: data.id || docSnap.id,
+              userId: data.userId,
+              orderNumber,
+              customer,
+              items: Array.isArray(data.items) ? data.items : [],
+              subtotal: Number(data.subtotal) || 0,
+              deliveryFee: Number(data.deliveryFee ?? data.shippingFee) || 0,
+              discount: Number(data.discount) || 0,
+              promoCode: data.promoCode,
+              total: Number(data.total) || 0,
+              status: data.status || 'pending_review',
+              paymentMethod: data.paymentMethod || 'cod',
+              paymentStatus: data.paymentStatus || 'pending_cod_collection',
+              notes: data.notes || '',
+              courier: data.courier,
+              statusHistory: Array.isArray(data.statusHistory) ? data.statusHistory : [],
+              createdAt: data.createdAt || new Date().toISOString(),
+              updatedAt: data.updatedAt || new Date().toISOString()
+            } as Order);
+          }
+        });
+
+        orders.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        onUpdate(orders);
+      },
+      (error) => {
+        console.warn('Realtime Firestore orders listener notice:', error);
+        if (onError) onError(error);
+      }
+    );
+
+    return unsubscribe;
+  } catch (error) {
+    console.warn('Failed to initialize Firestore order snapshot listener:', error);
+    return () => {};
+  }
+}
+
+/**
+ * Subscribe to real-time product catalogue stream from Cloud Firestore
+ */
+export function subscribeToProductsFirestore(
+  onUpdate: (products: Product[]) => void,
+  onError?: (err: any) => void
+): () => void {
+  if (!db) {
+    return () => {};
+  }
+
+  try {
+    const colRef = collection(db, PRODUCTS_COLLECTION);
+    const unsubscribe = onSnapshot(
+      colRef,
+      (snapshot) => {
+        if (snapshot.empty) return;
+        const products: Product[] = [];
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          if (data && (data.id || docSnap.id) && data.name) {
+            products.push({
+              id: data.id || docSnap.id,
+              name: data.name,
+              productCode: data.productCode || 'SH-ITEM',
+              category: data.category || 'Tops',
+              subcategory: data.subcategory || '',
+              material: data.material || 'Export Quality Fabric',
+              fit: data.fit || 'Regular Fit',
+              care: data.care || 'Machine wash cold',
+              tags: Array.isArray(data.tags) ? data.tags : [],
+              description: data.description || '',
+              price: Number(data.price) || 0,
+              originalPrice: data.originalPrice ? Number(data.originalPrice) : undefined,
+              images: Array.isArray(data.images) && data.images.length > 0 ? data.images : ['/images/products/top-1.jpg'],
+              sizes: Array.isArray(data.sizes) && data.sizes.length > 0 ? data.sizes : ['M'],
+              colors: Array.isArray(data.colors) && data.colors.length > 0 ? data.colors : [{ name: 'Default', hex: '#000000' }],
+              variants: Array.isArray(data.variants) ? data.variants : [],
+              totalStock: Number(data.totalStock) || 0,
+              status: data.status || 'published',
+              fabricDetails: data.fabricDetails || 'Export Quality Fabric',
+              careInstructions: Array.isArray(data.careInstructions) ? data.careInstructions : ['Machine wash cold'],
+              isFeatured: Boolean(data.isFeatured),
+              isNewArrival: Boolean(data.isNewArrival),
+              isBestSeller: Boolean(data.isBestSeller),
+              slug: data.slug || (data.name ? data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'product'),
+              createdAt: data.createdAt || new Date().toISOString(),
+              updatedAt: data.updatedAt || new Date().toISOString()
+            } as Product);
+          }
+        });
+        if (products.length > 0) {
+          onUpdate(products);
+        }
+      },
+      (error) => {
+        console.warn('Realtime Firestore products listener notice:', error);
+        if (onError) onError(error);
+      }
+    );
+
+    return unsubscribe;
+  } catch (error) {
+    console.warn('Failed to initialize Firestore product snapshot listener:', error);
+    return () => {};
+  }
+}
+
+/**
+ * Subscribe to real-time audit logs stream from Cloud Firestore
+ */
+export function subscribeToAuditLogsFirestore(
+  onUpdate: (logs: AuditLog[]) => void,
+  onError?: (err: any) => void
+): () => void {
+  if (!db) {
+    return () => {};
+  }
+
+  try {
+    const colRef = collection(db, AUDIT_COLLECTION);
+    const unsubscribe = onSnapshot(
+      colRef,
+      (snapshot) => {
+        const logs: AuditLog[] = [];
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          if (data && (data.id || docSnap.id) && data.action) {
+            logs.push({
+              id: data.id || docSnap.id,
+              actor: data.actor || 'System',
+              action: data.action,
+              details: data.details || '',
+              timestamp: data.timestamp || new Date().toISOString()
+            } as AuditLog);
+          }
+        });
+        logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        onUpdate(logs);
+      },
+      (error) => {
+        console.warn('Realtime Firestore audit listener notice:', error);
+        if (onError) onError(error);
+      }
+    );
+
+    return unsubscribe;
+  } catch (error) {
+    console.warn('Failed to initialize Firestore audit snapshot listener:', error);
+    return () => {};
   }
 }
 

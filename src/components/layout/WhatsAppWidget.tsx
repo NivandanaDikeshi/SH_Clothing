@@ -79,7 +79,7 @@ export const WhatsAppWidget: React.FC = () => {
               SH Clothing Store
             </div>
             <div style={{ fontSize: '0.785rem', color: '#e4e4e7', marginTop: 4, lineHeight: 1.4 }}>
-              පිටරටින් ආනයනය කරන ලද Quality 💯 ඇදුම් IMPORTED WEARS ✈️
+              පිටරටින් ආනයනය කරන ලද 100% Quality ඇදුම් (IMPORTED WEARS) 
             </div>
           </div>
 
@@ -107,7 +107,7 @@ export const WhatsAppWidget: React.FC = () => {
             >
               <Send size={18} />
               <div>
-                <div>077-116-7406 Whatsapp ඇනවුම් 📥</div>
+                <div>077-116-7406 Whatsapp ඇනවුම්</div>
                 <div style={{ fontSize: '0.7rem', opacity: 0.9, fontWeight: 500 }}>Direct message our order team</div>
               </div>
             </a>
@@ -134,7 +134,7 @@ export const WhatsAppWidget: React.FC = () => {
             >
               <Users size={18} style={{ color: 'var(--sh-gold)' }} />
               <div>
-                <div>Join Official WhatsApp Group 👥</div>
+                <div>Join Official WhatsApp Group</div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--sh-text-muted)', fontWeight: 500 }}>Daily new drop previews &amp; alerts</div>
               </div>
             </a>
@@ -142,7 +142,7 @@ export const WhatsAppWidget: React.FC = () => {
 
           {/* Footer note */}
           <div style={{ background: '#f4f4f5', padding: '0.6rem 1rem', borderTop: '1px solid var(--sh-border)', fontSize: '0.725rem', color: 'var(--sh-text-secondary)', textAlign: 'center', fontWeight: 600 }}>
-            WHOLESALE AVAILABLE | COD AVAILABLE ✅
+            WHOLESALE AVAILABLE | COD AVAILABLE 
           </div>
         </div>
       )}

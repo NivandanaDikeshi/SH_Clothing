@@ -14,7 +14,10 @@ import {
   deleteUserFromFirestore,
   saveRoleToFirestore,
   deleteRoleFromFirestore,
-  fetchRolesFromFirestore
+  fetchRolesFromFirestore,
+  subscribeToOrdersFirestore,
+  subscribeToProductsFirestore,
+  subscribeToAuditLogsFirestore
 } from './firestoreService';
 import { isFirebaseConfigured } from './firebase';
 
@@ -812,4 +815,131 @@ export function deleteCustomRole(roleId: string, actor: string = 'Admin'): boole
     deleteRoleFromFirestore(roleId).catch(err => console.warn('Firestore role delete warning:', err));
   }
   return true;
+}
+
+/**
+ * Realtime Firestore Synchronization Engine
+ */
+let isRealtimeSyncInitialized = false;
+let firestoreSyncState = {
+  isConnected: false,
+  mode: 'local' as 'realtime' | 'local' | 'connecting',
+  lastSyncTime: null as string | null,
+  error: null as string | null
+};
+
+export function getFirestoreSyncState() {
+  return firestoreSyncState;
+}
+
+export function initRealtimeFirestoreSync(): () => void {
+  if (!isBrowser || isRealtimeSyncInitialized) {
+    return () => {};
+  }
+
+  isRealtimeSyncInitialized = true;
+  firestoreSyncState.mode = 'connecting';
+  window.dispatchEvent(new Event('sh_firestore_status_changed'));
+
+  const unsubOrders = subscribeToOrdersFirestore(
+    (firestoreOrders) => {
+      if (!Array.isArray(firestoreOrders)) return;
+
+      const localOrders = getStoredOrders();
+      const orderMap = new Map<string, Order>();
+
+      // Preserve local orders first
+      localOrders.forEach(o => orderMap.set(o.id || o.orderNumber, o));
+
+      // Overwrite / merge with authoritative real-time Firestore data
+      firestoreOrders.forEach(o => orderMap.set(o.id || o.orderNumber, o));
+
+      const merged = Array.from(orderMap.values());
+      merged.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+      // Save to localStorage
+      try {
+        localStorage.setItem(ORDERS_KEY, JSON.stringify(merged));
+      } catch (e) {
+        // ignore
+      }
+
+      firestoreSyncState.isConnected = true;
+      firestoreSyncState.mode = 'realtime';
+      firestoreSyncState.lastSyncTime = new Date().toISOString();
+      firestoreSyncState.error = null;
+
+      window.dispatchEvent(new Event('sh_orders_updated'));
+      window.dispatchEvent(new Event('sh_firestore_status_changed'));
+    },
+    (err) => {
+      firestoreSyncState.isConnected = false;
+      firestoreSyncState.mode = 'local';
+      firestoreSyncState.error = err?.message || 'Firestore connection notice';
+      window.dispatchEvent(new Event('sh_firestore_status_changed'));
+    }
+  );
+
+  const unsubProducts = subscribeToProductsFirestore(
+    (firestoreProducts) => {
+      if (!Array.isArray(firestoreProducts) || firestoreProducts.length === 0) return;
+
+      const localProducts = getStoredProducts();
+      const prodMap = new Map<string, Product>();
+
+      localProducts.forEach(p => prodMap.set(p.id, p));
+      firestoreProducts.forEach(p => prodMap.set(p.id, p));
+
+      const merged = Array.from(prodMap.values());
+
+      try {
+        localStorage.setItem(PRODUCTS_KEY, JSON.stringify(merged));
+      } catch (e) {
+        // ignore
+      }
+
+      firestoreSyncState.isConnected = true;
+      firestoreSyncState.mode = 'realtime';
+      firestoreSyncState.lastSyncTime = new Date().toISOString();
+
+      window.dispatchEvent(new Event('sh_products_updated'));
+      window.dispatchEvent(new Event('sh_firestore_status_changed'));
+    },
+    (err) => {
+      // ignore
+    }
+  );
+
+  const unsubAudit = subscribeToAuditLogsFirestore(
+    (firestoreLogs) => {
+      if (!Array.isArray(firestoreLogs) || firestoreLogs.length === 0) return;
+
+      const localLogs = getAuditLogs();
+      const logMap = new Map<string, AuditLog>();
+
+      localLogs.forEach(l => logMap.set(l.id, l));
+      firestoreLogs.forEach(l => logMap.set(l.id, l));
+
+      const merged = Array.from(logMap.values());
+      merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+      try {
+        localStorage.setItem(AUDIT_KEY, JSON.stringify(merged));
+      } catch (e) {
+        // ignore
+      }
+
+      window.dispatchEvent(new Event('sh_audit_logs_updated'));
+    },
+    (err) => {
+      // ignore
+    }
+  );
+
+  return () => {
+    unsubOrders();
+    unsubProducts();
+    unsubAudit();
+    isRealtimeSyncInitialized = false;
+  };
 }

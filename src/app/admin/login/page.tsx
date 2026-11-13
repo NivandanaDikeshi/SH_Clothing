@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -15,7 +15,61 @@ import {
   KeyRound,
   ExternalLink,
   CheckCircle2,
+  Users,
+  Package,
+  Sparkles,
+  Layers,
+  ShoppingBag
 } from 'lucide-react';
+
+interface AuthorizedAdmin {
+  email: string;
+  password: string;
+  name: string;
+  role: 'owner' | 'manager' | 'order_staff' | 'content_staff';
+  title: string;
+  badge: string;
+  color: string;
+}
+
+const AUTHORIZED_ADMINS: AuthorizedAdmin[] = [
+  {
+    email: 'admin@shclothing.lk',
+    password: 'admin2026',
+    name: 'Super Admin',
+    role: 'owner',
+    title: 'Store Owner & Executive',
+    badge: 'Full Access',
+    color: 'var(--sh-gold)'
+  },
+  {
+    email: 'manager@shclothing.lk',
+    password: 'shmanager2026',
+    name: 'Store Manager',
+    role: 'manager',
+    title: 'Operations & Stock Manager',
+    badge: 'Operations',
+    color: '#38bdf8'
+  },
+  {
+    email: 'dispatch@shclothing.lk',
+    password: 'shdispatch2026',
+    name: 'Order & Dispatch Staff',
+    role: 'order_staff',
+    title: 'COD & Courier Dispatcher',
+    badge: 'Order Hub',
+    color: '#34d399'
+  },
+  {
+    email: 'content@shclothing.lk',
+    password: 'shcontent2026',
+    name: 'Content & Media Staff',
+    role: 'content_staff',
+    title: 'Garment Photography & Media',
+    badge: 'Media Staff',
+    color: '#c084fc'
+  }
+];
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -26,40 +80,96 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [activeSession, setActiveSession] = useState<any>(null);
+
+  // Check if admin is already logged in (session persistence)
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('sh_admin_auth');
+      if (stored) {
+        setActiveSession(JSON.parse(stored));
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleSelectRole = (roleItem: AuthorizedAdmin) => {
+    setEmail(roleItem.email);
+    setPassword(roleItem.password);
+    setError('');
+  };
+
+  const handleClearSession = () => {
+    localStorage.removeItem('sh_admin_auth');
+    localStorage.removeItem('sh_admin_active_role');
+    setActiveSession(null);
+  };
 
   const handleLogin = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
 
-    if (!email.trim()) {
-      setError('Please provide an administrative work email.');
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanEmail) {
+      setError('Please provide your administrative work email.');
       return;
     }
 
     if (!password) {
-      setError('Please provide a staff password.');
+      setError('Please provide your staff password.');
       return;
     }
 
     setLoading(true);
 
-    // Demo-only login: replace this with your real authentication API.
+    // Retrieve system admins + any custom registered administrators from storage
+    let customAdmins: AuthorizedAdmin[] = [];
+    try {
+      const stored = localStorage.getItem('sh_custom_admins_v1');
+      if (stored) customAdmins = JSON.parse(stored);
+    } catch {
+      // ignore
+    }
+
+    const allAdmins = [...AUTHORIZED_ADMINS, ...customAdmins];
+    const match = allAdmins.find(a => a.email.toLowerCase() === cleanEmail);
+
     window.setTimeout(() => {
+      // 1. Check if email has admin permissions
+      if (!match) {
+        setLoading(false);
+        setError('Access Denied: This email address does not have administrative permissions for SH Clothing.');
+        return;
+      }
+
+      // 2. Check password for this authorized administrator
+      if (match.password !== password) {
+        setLoading(false);
+        setError('Incorrect password. Please verify the password for this staff role.');
+        return;
+      }
+
+      // 3. Authenticated successfully with role
       const adminSession = {
-        email: email.trim(),
-        name: 'SH Admin',
+        email: match.email,
+        name: match.name,
+        role: match.role,
+        title: match.title,
         token: `sh_admin_token_${Date.now()}`,
         loggedInAt: new Date().toISOString(),
       };
 
       localStorage.setItem('sh_admin_auth', JSON.stringify(adminSession));
+      localStorage.setItem('sh_admin_active_role', match.role);
 
       setSuccess(true);
 
       window.setTimeout(() => {
         router.push('/admin');
-      }, 500);
-    }, 450);
+      }, 400);
+    }, 350);
   };
 
   return (
@@ -77,8 +187,8 @@ export default function AdminLoginPage() {
         fontFamily: 'var(--font-sans)',
       }}
     >
-      <div style={{ width: '100%', maxWidth: 480 }}>
-        <header style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+      <div style={{ width: '100%', maxWidth: 500 }}>
+        <header style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div
             style={{
               display: 'inline-flex',
@@ -91,7 +201,7 @@ export default function AdminLoginPage() {
               border: '2px solid var(--sh-gold)',
               padding: 10,
               boxShadow: '0 0 25px rgba(198, 156, 71, 0.25)',
-              marginBottom: '1.25rem',
+              marginBottom: '1rem',
             }}
           >
             <Image
@@ -113,13 +223,13 @@ export default function AdminLoginPage() {
               marginBottom: 6,
             }}
           >
-            Operational Control Center
+            Role-Based Operational Portal
           </div>
 
           <h1
             style={{
               fontFamily: 'var(--font-serif)',
-              fontSize: '2.25rem',
+              fontSize: '2.15rem',
               margin: 0,
               fontWeight: 800,
               letterSpacing: '0.04em',
@@ -129,22 +239,89 @@ export default function AdminLoginPage() {
             SH Admin Portal
           </h1>
 
-          <p style={{ fontSize: '0.875rem', color: '#94a3b8', marginTop: 8 }}>
-            Restricted access portal for authorized store executives and order
-            dispatch personnel.
+          <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: 8 }}>
+            Role-Based Access for Super Admin, Store Manager, Order &amp; Dispatch Staff, and Content &amp; Media Staff.
           </p>
         </header>
 
         <section
           style={{
-            background: 'rgba(24, 29, 38, 0.92)',
+            background: 'rgba(24, 29, 38, 0.94)',
             backdropFilter: 'blur(16px)',
             borderRadius: 'var(--radius-xl)',
-            padding: '2.5rem 2.25rem',
+            padding: '2.25rem 2rem',
             border: '1px solid rgba(255, 255, 255, 0.1)',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
           }}
         >
+          {/* Active Session Continuity: If not logged out, staff can enter immediately */}
+          {activeSession && !success ? (
+            <div
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(198, 156, 71, 0.35)',
+                borderRadius: 14,
+                padding: '1.5rem',
+                textAlign: 'center',
+                marginBottom: '1.5rem'
+              }}
+            >
+              <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(198, 156, 71, 0.2)', border: '2px solid var(--sh-gold)', color: 'var(--sh-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem', fontWeight: 800, fontSize: '1.1rem' }}>
+                {activeSession.name?.slice(0, 2).toUpperCase() || 'AD'}
+              </div>
+              <div style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--sh-gold)' }}>
+                Active Administrative Session
+              </div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff', marginTop: 3 }}>
+                {activeSession.name}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: 2 }}>
+                {activeSession.title || activeSession.role} • {activeSession.email}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginTop: '1.25rem' }}>
+                <button
+                  type="button"
+                  onClick={() => router.push('/admin')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    background: 'linear-gradient(135deg, #c69c47 0%, #dfb969 100%)',
+                    color: '#000000',
+                    border: 'none',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '0.85rem',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <span>Enter Admin Dashboard</span>
+                  <ArrowRight size={16} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleClearSession}
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    color: '#94a3b8',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '0.6rem',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Sign In with Different Staff Role
+                </button>
+              </div>
+            </div>
+          ) : null}
+
           {error && (
             <div
               role="alert"
@@ -184,56 +361,90 @@ export default function AdminLoginPage() {
             >
               <CheckCircle2 size={16} style={{ flexShrink: 0 }} />
               <span>
-                Authentication verified. Redirecting to the admin dashboard...
+                Role verified successfully. Loading your authorized workspace...
               </span>
             </div>
           )}
 
+          {/* Quick Role Selectors for testing */}
+          <div style={{ marginBottom: '1.35rem' }}>
+            <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
+              Select Authorized Staff Role to Fill:
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.45rem' }}>
+              {AUTHORIZED_ADMINS.map(roleItem => {
+                const isSelected = email.toLowerCase() === roleItem.email.toLowerCase();
+                return (
+                  <button
+                    key={roleItem.role}
+                    type="button"
+                    onClick={() => handleSelectRole(roleItem)}
+                    style={{
+                      background: isSelected ? 'rgba(198, 156, 71, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                      border: isSelected ? '1px solid var(--sh-gold)' : '1px solid rgba(255, 255, 255, 0.1)',
+                      color: isSelected ? 'var(--sh-gold)' : '#e2e8f0',
+                      padding: '0.45rem 0.65rem',
+                      borderRadius: 8,
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 2,
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <span style={{ fontSize: '0.78rem' }}>{roleItem.name}</span>
+                    <span style={{ fontSize: '0.66rem', color: roleItem.color }}>{roleItem.badge}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <form
             onSubmit={handleLogin}
-            style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
+            style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}
           >
             <div>
               <label
                 htmlFor="admin-email"
                 style={{
                   display: 'block',
-                  fontSize: '0.775rem',
+                  fontSize: '0.8rem',
                   fontWeight: 700,
-                  color: '#e2e8f0',
-                  marginBottom: '0.4rem',
-                  textTransform: 'uppercase',
                   letterSpacing: '0.05em',
+                  textTransform: 'uppercase',
+                  color: '#cbd5e1',
+                  marginBottom: '0.4rem',
                 }}
               >
-                Staff Email Address
+                Administrative Email Address
               </label>
-
               <div style={{ position: 'relative' }}>
                 <input
                   id="admin-email"
                   type="email"
                   value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@shclothing.lk"
-                  autoComplete="username"
                   required
+                  disabled={loading || success}
                   style={{
                     width: '100%',
-                    boxSizing: 'border-box',
-                    padding: '0.75rem 1rem 0.75rem 2.4rem',
-                    fontSize: '0.9rem',
+                    padding: '0.75rem 1rem 0.75rem 2.5rem',
+                    background: 'rgba(15, 18, 23, 0.85)',
+                    border: '1.5px solid rgba(255, 255, 255, 0.15)',
                     borderRadius: 'var(--radius-md)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    background: '#111419',
                     color: '#ffffff',
+                    fontSize: '0.9rem',
                     outline: 'none',
+                    boxSizing: 'border-box'
                   }}
                 />
-
                 <Mail
                   size={16}
-                  aria-hidden="true"
                   style={{
                     position: 'absolute',
                     left: '0.85rem',
@@ -250,42 +461,39 @@ export default function AdminLoginPage() {
                 htmlFor="admin-password"
                 style={{
                   display: 'block',
-                  fontSize: '0.775rem',
+                  fontSize: '0.8rem',
                   fontWeight: 700,
-                  color: '#e2e8f0',
-                  marginBottom: '0.4rem',
-                  textTransform: 'uppercase',
                   letterSpacing: '0.05em',
+                  textTransform: 'uppercase',
+                  color: '#cbd5e1',
+                  marginBottom: '0.4rem',
                 }}
               >
-                Staff Password
+                Staff Access Password
               </label>
-
               <div style={{ position: 'relative' }}>
                 <input
                   id="admin-password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="Enter your password"
-                  autoComplete="current-password"
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
                   required
+                  disabled={loading || success}
                   style={{
                     width: '100%',
-                    boxSizing: 'border-box',
-                    padding: '0.75rem 2.5rem 0.75rem 2.4rem',
-                    fontSize: '0.9rem',
+                    padding: '0.75rem 2.6rem 0.75rem 2.5rem',
+                    background: 'rgba(15, 18, 23, 0.85)',
+                    border: '1.5px solid rgba(255, 255, 255, 0.15)',
                     borderRadius: 'var(--radius-md)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    background: '#111419',
                     color: '#ffffff',
+                    fontSize: '0.9rem',
                     outline: 'none',
+                    boxSizing: 'border-box'
                   }}
                 />
-
                 <Lock
                   size={16}
-                  aria-hidden="true"
                   style={{
                     position: 'absolute',
                     left: '0.85rem',
@@ -294,18 +502,20 @@ export default function AdminLoginPage() {
                     color: '#64748b',
                   }}
                 />
-
                 <button
                   type="button"
-                  onClick={() => setShowPassword((visible) => !visible)}
+                  onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                   style={{
                     position: 'absolute',
                     right: '0.75rem',
                     top: '50%',
                     transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
                     color: '#64748b',
-                    padding: '0.2rem',
+                    cursor: 'pointer',
+                    padding: 0,
                   }}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -332,12 +542,12 @@ export default function AdminLoginPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '0.5rem',
-                marginTop: '0.5rem',
+                marginTop: '0.4rem',
                 boxShadow: '0 4px 15px rgba(198, 156, 71, 0.35)',
               }}
             >
               <KeyRound size={17} />
-              <span>{loading ? 'Authenticating...' : 'Enter Admin Panel'}</span>
+              <span>{loading ? 'Verifying Role...' : 'Enter Admin Panel'}</span>
               {!loading && <ArrowRight size={17} />}
             </button>
           </form>
@@ -362,7 +572,7 @@ export default function AdminLoginPage() {
               }}
             >
               <ShieldCheck size={14} style={{ color: 'var(--sh-gold)' }} />
-              Demo login
+              Role Gated Security
             </span>
 
             <Link
@@ -389,7 +599,7 @@ export default function AdminLoginPage() {
             color: '#475569',
           }}
         >
-          SH Clothing Store Sri Lanka • Pixzora Labs (Pvt) Ltd.
+          SH Clothing Store Sri Lanka • Cash on Delivery Operational Systems
         </div>
       </div>
     </main>

@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getDashboardMetrics, getStoredOrders, getStoredProducts, getAuditLogs, deleteOrder } from '@/lib/store';
+import {
+  getDashboardMetrics,
+  getStoredOrders,
+  getStoredProducts,
+  getAuditLogs,
+  deleteOrder,
+  initRealtimeFirestoreSync,
+  getFirestoreSyncState
+} from '@/lib/store';
 import { seedAllStoreDataToFirestore, testFirestoreConnection } from '@/lib/firestoreService';
 import { DeleteConfirmModal } from '@/components/admin/DeleteConfirmModal';
 import { Order, Product, AuditLog } from '@/types';
@@ -41,6 +49,9 @@ export default function AdminDashboardPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSyncingFirebase, setIsSyncingFirebase] = useState(false);
   const [firebaseSyncNotice, setFirebaseSyncNotice] = useState<string | null>(null);
+  const [firestoreSyncState, setFirestoreSyncState] = useState(getFirestoreSyncState());
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [connectionTestNotice, setConnectionTestNotice] = useState<{ success: boolean; message: string } | null>(null);
 
   // Delete modal state for quick dashboard order management
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
@@ -49,18 +60,33 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     loadData();
+
+    // Start real-time Firestore stream
+    const cleanupRealtime = initRealtimeFirestoreSync();
+
+    const handleSyncStatusChange = () => {
+      setFirestoreSyncState({ ...getFirestoreSyncState() });
+    };
+
     window.addEventListener('sh_orders_updated', loadData);
     window.addEventListener('sh_products_updated', loadData);
+    window.addEventListener('sh_audit_logs_updated', loadData);
+    window.addEventListener('sh_firestore_status_changed', handleSyncStatusChange);
+
     return () => {
       window.removeEventListener('sh_orders_updated', loadData);
       window.removeEventListener('sh_products_updated', loadData);
+      window.removeEventListener('sh_audit_logs_updated', loadData);
+      window.removeEventListener('sh_firestore_status_changed', handleSyncStatusChange);
+      if (cleanupRealtime) cleanupRealtime();
     };
   }, []);
 
   const loadData = () => {
     setMetrics(getDashboardMetrics());
-    setRecentOrders(getStoredOrders().slice(0, 5));
+    setRecentOrders(getStoredOrders().slice(0, 6));
     setAuditLogs(getAuditLogs().slice(0, 6));
+    setFirestoreSyncState({ ...getFirestoreSyncState() });
   };
 
   const handleManualRefresh = () => {
@@ -85,6 +111,23 @@ export default function AdminDashboardPage() {
     } finally {
       setIsSyncingFirebase(false);
       setTimeout(() => setFirebaseSyncNotice(null), 8000);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    setIsTestingConnection(true);
+    setConnectionTestNotice(null);
+    try {
+      const res = await testFirestoreConnection();
+      setConnectionTestNotice(res);
+    } catch (err: any) {
+      setConnectionTestNotice({
+        success: false,
+        message: `Connection ping failed: ${err.message || 'Check network connection'}`
+      });
+    } finally {
+      setIsTestingConnection(false);
+      setTimeout(() => setConnectionTestNotice(null), 7000);
     }
   };
 
@@ -124,31 +167,79 @@ export default function AdminDashboardPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: 1440, margin: '0 auto' }}>
-      {/* Top Banner Alert: Cloud Firestore & 100% COD System Notice */}
+      {/* Top Banner Alert: Cloud Firestore Realtime & 100% COD System Notice */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
         gap: '0.75rem',
-        background: '#ecfdf5',
-        border: '1px solid #a7f3d0',
+        background: firestoreSyncState.mode === 'realtime' ? '#ecfdf5' : '#f0f9ff',
+        border: firestoreSyncState.mode === 'realtime' ? '1px solid #a7f3d0' : '1px solid #bae6fd',
         borderRadius: 10,
         padding: '0.65rem 1.15rem',
         fontSize: '0.8rem',
-        color: '#065f46'
+        color: firestoreSyncState.mode === 'realtime' ? '#065f46' : '#0369a1'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#059669' }} className="animate-pulse-subtle" />
+          <span
+            style={{
+              width: 9,
+              height: 9,
+              borderRadius: '50%',
+              background: firestoreSyncState.mode === 'realtime' ? '#059669' : firestoreSyncState.mode === 'connecting' ? '#d97706' : '#0284c7'
+            }}
+            className="animate-pulse-subtle"
+          />
           <span>
-            <strong>Cloud Firestore Database:</strong> SH-clothing-db (<code>sh-clothing-db-12639</code>)
+            <strong>Cloud Firestore:</strong> SH-clothing-db (<code>sh-clothing-db-12639</code>)
+          </span>
+          <span style={{
+            background: firestoreSyncState.mode === 'realtime' ? '#059669' : '#0284c7',
+            color: '#ffffff',
+            padding: '0.15rem 0.55rem',
+            borderRadius: 4,
+            fontSize: '0.7rem',
+            fontWeight: 800,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.3rem'
+          }}>
+            <Activity size={11} />
+            {firestoreSyncState.mode === 'realtime'
+              ? 'Realtime Stream Active'
+              : firestoreSyncState.mode === 'connecting'
+                ? 'Connecting Stream...'
+                : 'Local Cache (Cloud Ready)'}
           </span>
           <span style={{ background: '#047857', color: '#ffffff', padding: '0.15rem 0.5rem', borderRadius: 4, fontSize: '0.7rem', fontWeight: 800 }}>
             100% CASH ON DELIVERY (COD) SYSTEM
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={handleTestConnection}
+            disabled={isTestingConnection}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              background: '#ffffff',
+              color: '#065f46',
+              border: '1px solid #a7f3d0',
+              borderRadius: 6,
+              padding: '0.35rem 0.75rem',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              cursor: isTestingConnection ? 'not-allowed' : 'pointer',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+            }}
+          >
+            <Activity size={13} className={isTestingConnection ? 'animate-spin' : ''} />
+            <span>{isTestingConnection ? 'Testing Ping...' : 'Live Ping Test'}</span>
+          </button>
           <button
             type="button"
             onClick={handlePushToFirebase}
@@ -179,6 +270,23 @@ export default function AdminDashboardPage() {
           </Link>
         </div>
       </div>
+
+      {connectionTestNotice && (
+        <div style={{
+          background: connectionTestNotice.success ? '#ecfdf5' : '#fef2f2',
+          border: connectionTestNotice.success ? '1px solid #10b981' : '1px solid #ef4444',
+          color: connectionTestNotice.success ? '#065f46' : '#991b1b',
+          padding: '0.75rem 1.15rem',
+          borderRadius: 8,
+          fontSize: '0.825rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          {connectionTestNotice.success ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+          <span>{connectionTestNotice.message}</span>
+        </div>
+      )}
 
       {firebaseSyncNotice && (
         <div style={{
@@ -259,7 +367,23 @@ export default function AdminDashboardPage() {
         {/* Card 1: Total COD Sales Today */}
         <div style={{ background: '#ffffff', borderRadius: 12, padding: '1.25rem 1.5rem', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#6b7280' }}>Total COD Orders Today</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#6b7280' }}>Total COD Orders Today</span>
+              <span style={{
+                background: '#fee2e2',
+                color: '#dc2626',
+                fontSize: '0.625rem',
+                fontWeight: 800,
+                padding: '0.1rem 0.35rem',
+                borderRadius: 4,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.2rem'
+              }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#dc2626' }} className="animate-pulse-subtle" />
+                LIVE
+              </span>
+            </div>
             <div style={{ width: 34, height: 34, borderRadius: 8, background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Package size={17} />
             </div>
@@ -278,7 +402,23 @@ export default function AdminDashboardPage() {
         {/* Card 2: Revenue Today */}
         <div style={{ background: '#ffffff', borderRadius: 12, padding: '1.25rem 1.5rem', border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#6b7280' }}>Revenue Today (COD)</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#6b7280' }}>Revenue Today (COD)</span>
+              <span style={{
+                background: '#ecfdf5',
+                color: '#059669',
+                fontSize: '0.625rem',
+                fontWeight: 800,
+                padding: '0.1rem 0.35rem',
+                borderRadius: 4,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.2rem'
+              }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#059669' }} className="animate-pulse-subtle" />
+                LIVE
+              </span>
+            </div>
             <div style={{ width: 34, height: 34, borderRadius: 8, background: '#ecfdf5', color: '#047857', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <DollarSign size={17} />
             </div>

@@ -215,6 +215,49 @@ export default function CheckoutPage() {
         <div style={{ maxWidth: 1040, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2.5rem', alignItems: 'start' }}>
           {/* Left Form Column */}
           <form onSubmit={handleSubmitOrder} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            {!isAuthenticated && (
+              <div style={{ background: '#fffbeb', border: '1.5px solid #fde68a', borderRadius: 12, padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                <div>
+                  <div style={{ fontWeight: 800, color: '#92400e', fontSize: '0.875rem' }}>
+                    Already have an SH Clothing account?
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#78350f', marginTop: 2 }}>
+                    Sign in to automatically pre-fill your saved doorstep address and link this COD order to your order history.
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <Link
+                    href="/login?redirect=/checkout"
+                    style={{
+                      background: 'var(--sh-black)',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '0.78rem',
+                      padding: '0.45rem 0.85rem',
+                      borderRadius: 6,
+                      textDecoration: 'none'
+                    }}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/register?redirect=/checkout"
+                    style={{
+                      background: '#d97706',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '0.78rem',
+                      padding: '0.45rem 0.85rem',
+                      borderRadius: 6,
+                      textDecoration: 'none'
+                    }}
+                  >
+                    Register
+                  </Link>
+                </div>
+              </div>
+            )}
+
             {errorMessage && (
               <div style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '1rem', borderRadius: 'var(--radius-md)', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.875rem' }}>
                 <AlertCircle size={18} style={{ flexShrink: 0 }} />
@@ -550,7 +593,7 @@ export default function CheckoutPage() {
                   📥 Need help or want to order via WhatsApp?
                 </div>
                 <div style={{ color: '#15803d', marginBottom: 8 }}>
-                  077-116-7406 Whatsapp හරහා ඇනවුම් භාරදෙන්න • WHOLESALE AVAILABLE | COD AVAILABLE ✅
+                  077-116-7406 Whatsapp හරහා ඇනවුම් භාරදෙන්න • WHOLESALE AVAILABLE | COD AVAILABLE 
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <a
@@ -559,7 +602,7 @@ export default function CheckoutPage() {
                     rel="noopener noreferrer"
                     style={{ color: '#166534', fontWeight: 700, textDecoration: 'underline' }}
                   >
-                    💬 Chat 077-116-7406
+                    Chat 077-116-7406
                   </a>
                   <span>•</span>
                   <a
@@ -568,7 +611,7 @@ export default function CheckoutPage() {
                     rel="noopener noreferrer"
                     style={{ color: '#166534', fontWeight: 700, textDecoration: 'underline' }}
                   >
-                    👥 Join WhatsApp Group
+                    Join WhatsApp Group
                   </a>
                 </div>
               </div>

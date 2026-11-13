@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { getStoredOrders, updateOrderStatus, deleteOrder } from '@/lib/store';
+import { getStoredOrders, updateOrderStatus, deleteOrder, initRealtimeFirestoreSync } from '@/lib/store';
 import { fetchOrdersFromFirestore } from '@/lib/firestoreService';
 import { DeleteConfirmModal } from '@/components/admin/DeleteConfirmModal';
 import { Order, OrderStatus } from '@/types';
@@ -58,8 +58,12 @@ function OrdersContent() {
 
   useEffect(() => {
     loadOrders();
+    const cleanup = initRealtimeFirestoreSync();
     window.addEventListener('sh_orders_updated', loadOrders);
-    return () => window.removeEventListener('sh_orders_updated', loadOrders);
+    return () => {
+      window.removeEventListener('sh_orders_updated', loadOrders);
+      if (cleanup) cleanup();
+    };
   }, []);
 
   const loadOrders = async () => {
