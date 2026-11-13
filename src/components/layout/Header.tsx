@@ -67,14 +67,17 @@ export const Header: React.FC = () => {
         borderBottom: "1px solid var(--sh-border)",
       }}
     >
-      {/* Top Brand & WhatsApp Order Announcement Bar */}
+      {/* Top header */}
       <div
+        className="sh-header-container"
         style={{
-          background: "linear-gradient(90deg, #09090b 0%, #18181b 50%, #09090b 100%)",
-          color: "#ffffff",
-          fontSize: "0.78rem",
-          padding: "0.45rem 1rem",
-          borderBottom: "1px solid rgba(198, 156, 71, 0.3)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "1rem",
+          padding: "0.9rem 1.25rem",
+          maxWidth: 1440,
+          margin: "0 auto",
         }}
       >
         <div
@@ -87,75 +90,7 @@ export const Header: React.FC = () => {
             flexWrap: "wrap",
             gap: "0.5rem",
           }}
-        >
-          {/* Imported Grade A Statement & Wholesale notice */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-            <span
-              style={{
-                background: "var(--sh-gold)",
-                color: "#000000",
-                fontWeight: 900,
-                fontSize: "0.65rem",
-                padding: "0.15rem 0.45rem",
-                borderRadius: 4,
-                letterSpacing: "0.05em",
-                textTransform: "uppercase",
-              }}
-            >
-              GRADE A
-            </span>
-            <span style={{ fontWeight: 600, color: "#f4f4f5" }}>
-              පිටරටින් ආනයනය කරන ලද 100% Quality ඇදුම් (IMPORTED WEARS)
-            </span>
-            <span style={{ color: "var(--sh-gold)", fontWeight: 700 }}>
-              | WHOLESALE AVAILABLE | Cod available
-            </span>
-          </div>
-
-          {/* Quick WhatsApp Actions */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
-            <a
-              href="https://wa.me/94771167406?text=Hi%20SH%20Clothing%2C%20I%20would%20like%20to%20order%20imported%20Grade%20A%20garments."
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.35rem",
-                color: "#4ade80",
-                fontWeight: 700,
-                textDecoration: "none",
-                fontSize: "0.76rem",
-                background: "rgba(34, 197, 94, 0.15)",
-                padding: "0.2rem 0.6rem",
-                borderRadius: "var(--radius-full)",
-                border: "1px solid rgba(34, 197, 94, 0.35)",
-              }}
-            >
-              <span>077-116-7406 Whatsapp හරහා ඇනවුම් භාරදෙන්න</span>
-            </a>
-            <a
-              href="https://chat.whatsapp.com/FDeXbtvBaRU4iNct1LlsXb"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.35rem",
-                color: "var(--sh-gold)",
-                fontWeight: 700,
-                textDecoration: "none",
-                fontSize: "0.76rem",
-                background: "rgba(198, 156, 71, 0.15)",
-                padding: "0.2rem 0.6rem",
-                borderRadius: "var(--radius-full)",
-                border: "1px solid rgba(198, 156, 71, 0.35)",
-              }}
-            >
-              <span>Join WhatsApp Group</span>
-            </a>
-          </div>
-        </div>
+        />
       </div>
 
       {/* Main header */}
