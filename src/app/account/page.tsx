@@ -366,7 +366,7 @@ export default function AccountPage() {
                     Verified Customer
                   </span>
                   <span style={{ fontSize: '0.68rem', background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '0.1rem 0.5rem', borderRadius: 999, fontWeight: 700 }}>
-                    SH VIP Member
+                    Registered Member
                   </span>
                   <button
                     type="button"
@@ -936,7 +936,7 @@ export default function AccountPage() {
               )}
             </div>
 
-            {/* VIP WhatsApp Community & Wholesale Card */}
+            {/* Customer WhatsApp Community & Wholesale Card */}
             <div
               style={{
                 background: 'linear-gradient(135deg, #181a1f 0%, #0d0f12 100%)',
@@ -963,11 +963,11 @@ export default function AccountPage() {
               </span>
 
               <h4 style={{ fontSize: '1.05rem', margin: '0 0 0.5rem 0', color: '#ffffff', fontFamily: 'var(--font-serif)' }}>
-                VIP WhatsApp Community
+                Customer WhatsApp Community
               </h4>
 
               <p style={{ fontSize: '0.8rem', color: '#d1d5db', lineHeight: 1.5, margin: '0 0 1rem 0' }}>
-                පිටරටින් ආනයනය කරන ලද 100% Quality ඇදුම්. Join our VIP group for first-access drops, wholesale lots, and instant order tracking help.
+                පිටරටින් ආනයනය කරන ලද 100% Quality ඇදුම්. Join our WhatsApp group for first-access drops, wholesale lots, and instant order tracking help.
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -990,7 +990,7 @@ export default function AccountPage() {
                   }}
                 >
                   <MessageCircle size={16} />
-                  <span>Join VIP WhatsApp Group</span>
+                  <span>Join Customer WhatsApp Group</span>
                 </a>
 
                 <a
@@ -1141,10 +1141,10 @@ export default function AccountPage() {
                 </div>
               </div>
 
-              {/* Preset VIP Avatars */}
+              {/* Preset Avatars */}
               <div style={{ width: '100%' }}>
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#4b5563', marginBottom: '0.5rem', textAlign: 'left' }}>
-                  Or Choose a Luxury Avatar:
+                  Or Choose a Preset Avatar:
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem' }}>
                   {[

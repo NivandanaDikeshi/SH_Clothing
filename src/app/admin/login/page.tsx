@@ -1,25 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
-  Lock,
-  Mail,
-  ShieldCheck,
-  ShieldAlert,
   ArrowRight,
+  CheckCircle2,
+  ExternalLink,
   Eye,
   EyeOff,
   KeyRound,
-  ExternalLink,
-  CheckCircle2,
-  Users,
-  Package,
-  Sparkles,
-  Layers,
-  ShoppingBag
+  Lock,
+  Mail,
+  ShieldAlert,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface AuthorizedAdmin {
@@ -28,8 +23,6 @@ interface AuthorizedAdmin {
   name: string;
   role: 'owner' | 'manager' | 'order_staff' | 'content_staff';
   title: string;
-  badge: string;
-  color: string;
 }
 
 const AUTHORIZED_ADMINS: AuthorizedAdmin[] = [
@@ -39,8 +32,6 @@ const AUTHORIZED_ADMINS: AuthorizedAdmin[] = [
     name: 'Super Admin',
     role: 'owner',
     title: 'Store Owner & Executive',
-    badge: 'Full Access',
-    color: 'var(--sh-gold)'
   },
   {
     email: 'manager@shclothing.lk',
@@ -48,8 +39,6 @@ const AUTHORIZED_ADMINS: AuthorizedAdmin[] = [
     name: 'Store Manager',
     role: 'manager',
     title: 'Operations & Stock Manager',
-    badge: 'Operations',
-    color: '#38bdf8'
   },
   {
     email: 'dispatch@shclothing.lk',
@@ -57,8 +46,6 @@ const AUTHORIZED_ADMINS: AuthorizedAdmin[] = [
     name: 'Order & Dispatch Staff',
     role: 'order_staff',
     title: 'COD & Courier Dispatcher',
-    badge: 'Order Hub',
-    color: '#34d399'
   },
   {
     email: 'content@shclothing.lk',
@@ -66,23 +53,20 @@ const AUTHORIZED_ADMINS: AuthorizedAdmin[] = [
     name: 'Content & Media Staff',
     role: 'content_staff',
     title: 'Garment Photography & Media',
-    badge: 'Media Staff',
-    color: '#c084fc'
-  }
+  },
 ];
 
 export default function AdminLoginPage() {
   const router = useRouter();
 
-  const [email, setEmail] = useState('admin@shclothing.lk');
-  const [password, setPassword] = useState('admin2026');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [activeSession, setActiveSession] = useState<any>(null);
 
-  // Check if admin is already logged in (session persistence)
   useEffect(() => {
     try {
       const stored = localStorage.getItem('sh_admin_auth');
@@ -90,15 +74,9 @@ export default function AdminLoginPage() {
         setActiveSession(JSON.parse(stored));
       }
     } catch {
-      // ignore
+      // Ignore invalid stored session data.
     }
   }, []);
-
-  const handleSelectRole = (roleItem: AuthorizedAdmin) => {
-    setEmail(roleItem.email);
-    setPassword(roleItem.password);
-    setError('');
-  };
 
   const handleClearSession = () => {
     localStorage.removeItem('sh_admin_auth');
@@ -113,57 +91,51 @@ export default function AdminLoginPage() {
     const cleanEmail = email.trim().toLowerCase();
 
     if (!cleanEmail) {
-      setError('Please provide your administrative work email.');
+      setError('Please enter your email address.');
       return;
     }
 
     if (!password) {
-      setError('Please provide your staff password.');
+      setError('Please enter your password.');
       return;
     }
 
     setLoading(true);
 
-    // Retrieve system admins + any custom registered administrators from storage
     let customAdmins: AuthorizedAdmin[] = [];
+
     try {
       const stored = localStorage.getItem('sh_custom_admins_v1');
-      if (stored) customAdmins = JSON.parse(stored);
+      if (stored) {
+        customAdmins = JSON.parse(stored);
+      }
     } catch {
-      // ignore
+      // Ignore invalid stored administrator data.
     }
 
     const allAdmins = [...AUTHORIZED_ADMINS, ...customAdmins];
-    const match = allAdmins.find(a => a.email.toLowerCase() === cleanEmail);
+    const admin = allAdmins.find(
+      (item) => item.email.toLowerCase() === cleanEmail,
+    );
 
     window.setTimeout(() => {
-      // 1. Check if email has admin permissions
-      if (!match) {
+      if (!admin || admin.password !== password) {
         setLoading(false);
-        setError('Access Denied: This email address does not have administrative permissions for SH Clothing.');
+        setError('Invalid email address or password.');
         return;
       }
 
-      // 2. Check password for this authorized administrator
-      if (match.password !== password) {
-        setLoading(false);
-        setError('Incorrect password. Please verify the password for this staff role.');
-        return;
-      }
-
-      // 3. Authenticated successfully with role
       const adminSession = {
-        email: match.email,
-        name: match.name,
-        role: match.role,
-        title: match.title,
+        email: admin.email,
+        name: admin.name,
+        role: admin.role,
+        title: admin.title,
         token: `sh_admin_token_${Date.now()}`,
         loggedInAt: new Date().toISOString(),
       };
 
       localStorage.setItem('sh_admin_auth', JSON.stringify(adminSession));
-      localStorage.setItem('sh_admin_active_role', match.role);
-
+      localStorage.setItem('sh_admin_active_role', admin.role);
       setSuccess(true);
 
       window.setTimeout(() => {
@@ -223,7 +195,7 @@ export default function AdminLoginPage() {
               marginBottom: 6,
             }}
           >
-            Role-Based Operational Portal
+            Admin Portal
           </div>
 
           <h1
@@ -240,7 +212,7 @@ export default function AdminLoginPage() {
           </h1>
 
           <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: 8 }}>
-            Role-Based Access for Super Admin, Store Manager, Order &amp; Dispatch Staff, and Content &amp; Media Staff.
+            Sign in with your email address and password.
           </p>
         </header>
 
@@ -254,8 +226,7 @@ export default function AdminLoginPage() {
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
           }}
         >
-          {/* Active Session Continuity: If not logged out, staff can enter immediately */}
-          {activeSession && !success ? (
+          {activeSession && !success && (
             <div
               style={{
                 background: 'rgba(255, 255, 255, 0.05)',
@@ -263,23 +234,68 @@ export default function AdminLoginPage() {
                 borderRadius: 14,
                 padding: '1.5rem',
                 textAlign: 'center',
-                marginBottom: '1.5rem'
+                marginBottom: '1.5rem',
               }}
             >
-              <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(198, 156, 71, 0.2)', border: '2px solid var(--sh-gold)', color: 'var(--sh-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem', fontWeight: 800, fontSize: '1.1rem' }}>
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',
+                  background: 'rgba(198, 156, 71, 0.2)',
+                  border: '2px solid var(--sh-gold)',
+                  color: 'var(--sh-gold)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 0.75rem',
+                  fontWeight: 800,
+                }}
+              >
                 {activeSession.name?.slice(0, 2).toUpperCase() || 'AD'}
               </div>
-              <div style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--sh-gold)' }}>
+
+              <div
+                style={{
+                  fontSize: '0.7rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  color: 'var(--sh-gold)',
+                }}
+              >
                 Active Administrative Session
               </div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff', marginTop: 3 }}>
+
+              <div
+                style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 800,
+                  marginTop: 3,
+                }}
+              >
                 {activeSession.name}
               </div>
-              <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: 2 }}>
-                {activeSession.title || activeSession.role} • {activeSession.email}
+
+              <div
+                style={{
+                  fontSize: '0.8rem',
+                  color: '#94a3b8',
+                  marginTop: 2,
+                }}
+              >
+                {activeSession.title || activeSession.role} •{' '}
+                {activeSession.email}
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginTop: '1.25rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.65rem',
+                  marginTop: '1.25rem',
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => router.push('/admin')}
@@ -288,17 +304,17 @@ export default function AdminLoginPage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '0.5rem',
-                    background: 'linear-gradient(135deg, #c69c47 0%, #dfb969 100%)',
+                    background:
+                      'linear-gradient(135deg, #c69c47 0%, #dfb969 100%)',
                     color: '#000000',
                     border: 'none',
                     borderRadius: 'var(--radius-md)',
                     padding: '0.85rem',
                     fontWeight: 800,
-                    fontSize: '0.9rem',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
                   }}
                 >
-                  <span>Enter Admin Dashboard</span>
+                  Enter Admin Dashboard
                   <ArrowRight size={16} />
                 </button>
 
@@ -313,14 +329,14 @@ export default function AdminLoginPage() {
                     padding: '0.6rem',
                     fontSize: '0.8rem',
                     fontWeight: 600,
-                    cursor: 'pointer'
+                    cursor: 'pointer',
                   }}
                 >
-                  Sign In with Different Staff Role
+                  Sign In with Different Account
                 </button>
               </div>
             </div>
-          ) : null}
+          )}
 
           {error && (
             <div
@@ -338,7 +354,7 @@ export default function AdminLoginPage() {
                 gap: '0.5rem',
               }}
             >
-              <ShieldAlert size={16} style={{ flexShrink: 0 }} />
+              <ShieldAlert size={16} />
               <span>{error}</span>
             </div>
           )}
@@ -359,49 +375,10 @@ export default function AdminLoginPage() {
                 gap: '0.5rem',
               }}
             >
-              <CheckCircle2 size={16} style={{ flexShrink: 0 }} />
-              <span>
-                Role verified successfully. Loading your authorized workspace...
-              </span>
+              <CheckCircle2 size={16} />
+              <span>Login successful. Opening the admin panel...</span>
             </div>
           )}
-
-          {/* Quick Role Selectors for testing */}
-          <div style={{ marginBottom: '1.35rem' }}>
-            <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
-              Select Authorized Staff Role to Fill:
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.45rem' }}>
-              {AUTHORIZED_ADMINS.map(roleItem => {
-                const isSelected = email.toLowerCase() === roleItem.email.toLowerCase();
-                return (
-                  <button
-                    key={roleItem.role}
-                    type="button"
-                    onClick={() => handleSelectRole(roleItem)}
-                    style={{
-                      background: isSelected ? 'rgba(198, 156, 71, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                      border: isSelected ? '1px solid var(--sh-gold)' : '1px solid rgba(255, 255, 255, 0.1)',
-                      color: isSelected ? 'var(--sh-gold)' : '#e2e8f0',
-                      padding: '0.45rem 0.65rem',
-                      borderRadius: 8,
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 2,
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <span style={{ fontSize: '0.78rem' }}>{roleItem.name}</span>
-                    <span style={{ fontSize: '0.66rem', color: roleItem.color }}>{roleItem.badge}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
 
           <form
             onSubmit={handleLogin}
@@ -422,13 +399,15 @@ export default function AdminLoginPage() {
               >
                 Administrative Email Address
               </label>
+
               <div style={{ position: 'relative' }}>
                 <input
                   id="admin-email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@shclothing.lk"
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="Enter your email address"
+                  autoComplete="username"
                   required
                   disabled={loading || success}
                   style={{
@@ -440,7 +419,7 @@ export default function AdminLoginPage() {
                     color: '#ffffff',
                     fontSize: '0.9rem',
                     outline: 'none',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
                   }}
                 />
                 <Mail
@@ -471,13 +450,15 @@ export default function AdminLoginPage() {
               >
                 Staff Access Password
               </label>
+
               <div style={{ position: 'relative' }}>
                 <input
                   id="admin-password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
                   required
                   disabled={loading || success}
                   style={{
@@ -489,7 +470,7 @@ export default function AdminLoginPage() {
                     color: '#ffffff',
                     fontSize: '0.9rem',
                     outline: 'none',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
                   }}
                 />
                 <Lock
@@ -504,7 +485,7 @@ export default function AdminLoginPage() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => setShowPassword((visible) => !visible)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                   style={{
                     position: 'absolute',
@@ -529,7 +510,8 @@ export default function AdminLoginPage() {
               style={{
                 width: '100%',
                 padding: '0.9rem',
-                background: 'linear-gradient(135deg, #c69c47 0%, #dfb969 100%)',
+                background:
+                  'linear-gradient(135deg, #c69c47 0%, #dfb969 100%)',
                 color: '#000000',
                 border: 'none',
                 borderRadius: 'var(--radius-md)',
@@ -547,7 +529,7 @@ export default function AdminLoginPage() {
               }}
             >
               <KeyRound size={17} />
-              <span>{loading ? 'Verifying Role...' : 'Enter Admin Panel'}</span>
+              <span>{loading ? 'Verifying...' : 'Enter Admin Panel'}</span>
               {!loading && <ArrowRight size={17} />}
             </button>
           </form>
@@ -585,7 +567,7 @@ export default function AdminLoginPage() {
                 textDecoration: 'underline',
               }}
             >
-              <span>Back to Storefront</span>
+              Back to Storefront
               <ExternalLink size={12} />
             </Link>
           </footer>

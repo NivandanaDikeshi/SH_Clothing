@@ -96,7 +96,7 @@ function RegisterFormContent() {
             <div style={{ position: 'absolute', inset: 0, opacity: 0.4 }}>
               <Image
                 src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80"
-                alt="SH VIP Fashion"
+                alt="SH Fashion"
                 fill
                 style={{ objectFit: 'cover' }}
               />
@@ -106,7 +106,7 @@ function RegisterFormContent() {
             <div style={{ position: 'relative', zIndex: 2 }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(219, 39, 119, 0.2)', border: '1px solid #db2777', color: '#f472b6', fontSize: '0.725rem', fontWeight: 800, padding: '0.3rem 0.75rem', borderRadius: 'var(--radius-full)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1.5rem' }}>
                 <Sparkles size={13} />
-                SH VIP Shopper Club
+                SH Shopper Club
               </div>
 
               <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '2.2rem', lineHeight: 1.2, margin: '0 0 1rem 0', color: '#ffffff' }}>

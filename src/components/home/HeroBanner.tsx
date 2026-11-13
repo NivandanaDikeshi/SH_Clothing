@@ -74,7 +74,7 @@ const SLIDES: Slide[] = [
     subtitle: 'Bulk pricing lots on Grade-A imported consignments. Island-wide Cash on Delivery with same-day dispatch and live package tracking from our Colombo central distribution warehouse.',
     primaryBtnText: 'WhatsApp Wholesale Desk',
     primaryBtnLink: 'https://wa.me/94771167406?text=Hi%20SH%20Clothing%2C%20I%20am%20interested%20in%20Wholesale%20lots.',
-    secondaryBtnText: 'Join VIP WhatsApp Group 👥',
+    secondaryBtnText: 'Join WhatsApp Group 👥',
     secondaryBtnLink: 'https://chat.whatsapp.com/FDeXbtvBaRU4iNct1LlsXb',
     isWhatsAppSecondary: false
   }

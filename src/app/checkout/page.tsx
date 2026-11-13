@@ -164,7 +164,7 @@ export default function CheckoutPage() {
 
     try {
       // Create order with atomic stock deduction and audit log
-      const newOrder = createNewOrder({
+      const newOrder = await createNewOrder({
         userId: user?.id,
         customer: formData,
         items,
@@ -546,20 +546,12 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
-              {/* Pricing breakdown */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', borderTop: '1px solid var(--sh-sand)', paddingTop: '1rem', fontSize: '0.875rem' }}>
+              {/* Order Amount */}
+              <div style={{ marginBottom: '1.25rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--sh-text-secondary)' }}>
                   <span>Subtotal</span>
-                  <span style={{ fontWeight: 600, color: 'var(--sh-black)' }}>Rs. {subtotal.toLocaleString()}</span>
+                  <span>Rs. {subtotal.toLocaleString()}</span>
                 </div>
-
-                {discountAmount > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--sh-emerald)' }}>
-                    <span>Promo Discount ({promo?.code})</span>
-                    <span style={{ fontWeight: 600 }}>- Rs. {discountAmount.toLocaleString()}</span>
-                  </div>
-                )}
-
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--sh-text-secondary)' }}>
                   <span>
                     Delivery ({formData.district})

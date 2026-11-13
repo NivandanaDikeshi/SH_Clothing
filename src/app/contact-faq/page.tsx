@@ -191,7 +191,7 @@ export default function ContactAndFaqPage() {
                   }}
                 >
                   <MessageCircle size={16} />
-                  <span>Join VIP WhatsApp Community</span>
+                  <span>Join WhatsApp Community</span>
                 </a>
               </div>
             </div>

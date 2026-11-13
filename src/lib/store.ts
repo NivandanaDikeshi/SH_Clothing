@@ -461,7 +461,9 @@ export function restoreOrderStock(items: CartItem[], orderNumber: string, actor:
 /**
  * Creates a new COD order
  */
-export function createNewOrder(orderData: Omit<Order, 'id' | 'orderNumber' | 'statusHistory' | 'createdAt' | 'updatedAt'>): Order {
+export async function createNewOrder(
+  orderData: Omit<Order, 'id' | 'orderNumber' | 'statusHistory' | 'createdAt' | 'updatedAt'>
+): Promise<Order> {
   const orders = getStoredOrders();
   const year = new Date().getFullYear();
   const randomSuffix = Math.floor(1000 + Math.random() * 9000);
@@ -487,13 +489,17 @@ export function createNewOrder(orderData: Omit<Order, 'id' | 'orderNumber' | 'st
   // Atomically reduce stock
   deductOrderStock(newOrder.items, orderNumber, 'Website COD Checkout');
 
-  // Save order
+  // Save order locally first so data is guaranteed safe
   orders.unshift(newOrder);
   saveStoredOrders(orders);
 
-  // Sync order to Firestore
+  // Sync order to Cloud Firestore (awaits cloud write with clean payload)
   if (isFirebaseConfigured) {
-    createOrderInFirestore(newOrder).catch(err => console.warn('Firestore order creation warning:', err));
+    try {
+      await createOrderInFirestore(newOrder);
+    } catch (err) {
+      console.warn('Firestore order creation warning (saved locally):', err);
+    }
   }
 
   // Log audit
@@ -818,9 +824,13 @@ export function deleteCustomRole(roleId: string, actor: string = 'Admin'): boole
 }
 
 /**
- * Realtime Firestore Synchronization Engine
+ * Realtime Firestore Synchronization Engine with Reference Counting
  */
-let isRealtimeSyncInitialized = false;
+let realtimeSubscribersCount = 0;
+let unsubRealtimeOrders: (() => void) | null = null;
+let unsubRealtimeProducts: (() => void) | null = null;
+let unsubRealtimeAudit: (() => void) | null = null;
+
 let firestoreSyncState = {
   isConnected: false,
   mode: 'local' as 'realtime' | 'local' | 'connecting',
@@ -833,113 +843,127 @@ export function getFirestoreSyncState() {
 }
 
 export function initRealtimeFirestoreSync(): () => void {
-  if (!isBrowser || isRealtimeSyncInitialized) {
+  if (!isBrowser) {
     return () => {};
   }
 
-  isRealtimeSyncInitialized = true;
-  firestoreSyncState.mode = 'connecting';
-  window.dispatchEvent(new Event('sh_firestore_status_changed'));
+  realtimeSubscribersCount++;
 
-  const unsubOrders = subscribeToOrdersFirestore(
-    (firestoreOrders) => {
-      if (!Array.isArray(firestoreOrders)) return;
+  if (realtimeSubscribersCount === 1) {
+    firestoreSyncState.mode = 'connecting';
+    window.dispatchEvent(new Event('sh_firestore_status_changed'));
 
-      const localOrders = getStoredOrders();
-      const orderMap = new Map<string, Order>();
+    unsubRealtimeOrders = subscribeToOrdersFirestore(
+      (firestoreOrders) => {
+        if (!Array.isArray(firestoreOrders)) return;
 
-      // Preserve local orders first
-      localOrders.forEach(o => orderMap.set(o.id || o.orderNumber, o));
+        const localOrders = getStoredOrders();
+        const orderMap = new Map<string, Order>();
 
-      // Overwrite / merge with authoritative real-time Firestore data
-      firestoreOrders.forEach(o => orderMap.set(o.id || o.orderNumber, o));
+        // Preserve local orders first
+        localOrders.forEach(o => orderMap.set(o.id || o.orderNumber, o));
 
-      const merged = Array.from(orderMap.values());
-      merged.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        // Overwrite / merge with authoritative real-time Firestore data
+        firestoreOrders.forEach(o => orderMap.set(o.id || o.orderNumber, o));
 
-      // Save to localStorage
-      try {
-        localStorage.setItem(ORDERS_KEY, JSON.stringify(merged));
-      } catch (e) {
+        const merged = Array.from(orderMap.values());
+        merged.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+        // Save to localStorage
+        try {
+          localStorage.setItem(ORDERS_KEY, JSON.stringify(merged));
+        } catch (e) {
+          // ignore
+        }
+
+        firestoreSyncState.isConnected = true;
+        firestoreSyncState.mode = 'realtime';
+        firestoreSyncState.lastSyncTime = new Date().toISOString();
+        firestoreSyncState.error = null;
+
+        window.dispatchEvent(new Event('sh_orders_updated'));
+        window.dispatchEvent(new Event('sh_firestore_status_changed'));
+      },
+      (err) => {
+        firestoreSyncState.isConnected = false;
+        firestoreSyncState.mode = 'local';
+        firestoreSyncState.error = err?.message || 'Firestore connection notice';
+        window.dispatchEvent(new Event('sh_firestore_status_changed'));
+      }
+    );
+
+    unsubRealtimeProducts = subscribeToProductsFirestore(
+      (firestoreProducts) => {
+        if (!Array.isArray(firestoreProducts) || firestoreProducts.length === 0) return;
+
+        const localProducts = getStoredProducts();
+        const prodMap = new Map<string, Product>();
+
+        localProducts.forEach(p => prodMap.set(p.id, p));
+        firestoreProducts.forEach(p => prodMap.set(p.id, p));
+
+        const merged = Array.from(prodMap.values());
+
+        try {
+          localStorage.setItem(PRODUCTS_KEY, JSON.stringify(merged));
+        } catch (e) {
+          // ignore
+        }
+
+        firestoreSyncState.isConnected = true;
+        firestoreSyncState.mode = 'realtime';
+        firestoreSyncState.lastSyncTime = new Date().toISOString();
+
+        window.dispatchEvent(new Event('sh_products_updated'));
+        window.dispatchEvent(new Event('sh_firestore_status_changed'));
+      },
+      (err) => {
         // ignore
       }
+    );
 
-      firestoreSyncState.isConnected = true;
-      firestoreSyncState.mode = 'realtime';
-      firestoreSyncState.lastSyncTime = new Date().toISOString();
-      firestoreSyncState.error = null;
+    unsubRealtimeAudit = subscribeToAuditLogsFirestore(
+      (firestoreLogs) => {
+        if (!Array.isArray(firestoreLogs) || firestoreLogs.length === 0) return;
 
-      window.dispatchEvent(new Event('sh_orders_updated'));
-      window.dispatchEvent(new Event('sh_firestore_status_changed'));
-    },
-    (err) => {
-      firestoreSyncState.isConnected = false;
-      firestoreSyncState.mode = 'local';
-      firestoreSyncState.error = err?.message || 'Firestore connection notice';
-      window.dispatchEvent(new Event('sh_firestore_status_changed'));
-    }
-  );
+        const localLogs = getAuditLogs();
+        const logMap = new Map<string, AuditLog>();
 
-  const unsubProducts = subscribeToProductsFirestore(
-    (firestoreProducts) => {
-      if (!Array.isArray(firestoreProducts) || firestoreProducts.length === 0) return;
+        localLogs.forEach(l => logMap.set(l.id, l));
+        firestoreLogs.forEach(l => logMap.set(l.id, l));
 
-      const localProducts = getStoredProducts();
-      const prodMap = new Map<string, Product>();
+        const merged = Array.from(logMap.values());
+        merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-      localProducts.forEach(p => prodMap.set(p.id, p));
-      firestoreProducts.forEach(p => prodMap.set(p.id, p));
+        try {
+          localStorage.setItem(AUDIT_KEY, JSON.stringify(merged));
+        } catch (e) {
+          // ignore
+        }
 
-      const merged = Array.from(prodMap.values());
-
-      try {
-        localStorage.setItem(PRODUCTS_KEY, JSON.stringify(merged));
-      } catch (e) {
+        window.dispatchEvent(new Event('sh_audit_logs_updated'));
+      },
+      (err) => {
         // ignore
       }
-
-      firestoreSyncState.isConnected = true;
-      firestoreSyncState.mode = 'realtime';
-      firestoreSyncState.lastSyncTime = new Date().toISOString();
-
-      window.dispatchEvent(new Event('sh_products_updated'));
-      window.dispatchEvent(new Event('sh_firestore_status_changed'));
-    },
-    (err) => {
-      // ignore
-    }
-  );
-
-  const unsubAudit = subscribeToAuditLogsFirestore(
-    (firestoreLogs) => {
-      if (!Array.isArray(firestoreLogs) || firestoreLogs.length === 0) return;
-
-      const localLogs = getAuditLogs();
-      const logMap = new Map<string, AuditLog>();
-
-      localLogs.forEach(l => logMap.set(l.id, l));
-      firestoreLogs.forEach(l => logMap.set(l.id, l));
-
-      const merged = Array.from(logMap.values());
-      merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-      try {
-        localStorage.setItem(AUDIT_KEY, JSON.stringify(merged));
-      } catch (e) {
-        // ignore
-      }
-
-      window.dispatchEvent(new Event('sh_audit_logs_updated'));
-    },
-    (err) => {
-      // ignore
-    }
-  );
+    );
+  }
 
   return () => {
-    unsubOrders();
-    unsubProducts();
-    unsubAudit();
-    isRealtimeSyncInitialized = false;
+    realtimeSubscribersCount = Math.max(0, realtimeSubscribersCount - 1);
+    if (realtimeSubscribersCount === 0) {
+      if (unsubRealtimeOrders) {
+        unsubRealtimeOrders();
+        unsubRealtimeOrders = null;
+      }
+      if (unsubRealtimeProducts) {
+        unsubRealtimeProducts();
+        unsubRealtimeProducts = null;
+      }
+      if (unsubRealtimeAudit) {
+        unsubRealtimeAudit();
+        unsubRealtimeAudit = null;
+      }
+    }
   };
 }

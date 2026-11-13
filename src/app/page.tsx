@@ -150,63 +150,6 @@ export default function HomePage() {
 
       {/* Customer Reviews & Social Proof */}
       <CustomerReviews />
-
-      {/* VIP Club & Newsletter Section */}
-      <section style={{ padding: '4.5rem 0', background: 'var(--sh-cream)', borderTop: '1px solid var(--sh-border)' }}>
-        <div className="container" style={{ textAlign: 'center', maxWidth: 620, margin: '0 auto' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--sh-gold)', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-            <Sparkles size={16} /> VIP Exclusive Access
-          </div>
-          <h2 style={{ fontSize: 'clamp(1.8rem, 3.2vw, 2.4rem)', marginBottom: '0.75rem' }}>
-            Get Early Drop Alerts & 10% Off
-          </h2>
-          <p style={{ color: 'var(--sh-text-secondary)', fontSize: '0.925rem', lineHeight: 1.6, marginBottom: '2rem' }}>
-            Export surplus collections sell out rapidly. Subscribe with your email or follow our TikTok to receive private alerts 1 hour before viral drops go public.
-          </p>
-
-          {alreadyClaimedNotice && (
-            <div style={{ background: '#fffbeb', border: '1px solid #fde68a', padding: '1rem 1.25rem', borderRadius: 'var(--radius-lg)', color: '#92400e', marginBottom: '1.25rem', fontSize: '0.875rem', textAlign: 'center' }}>
-              <div style={{ fontWeight: 700, marginBottom: '0.35rem' }}>Notice: Single-Use Offer</div>
-              <div>{alreadyClaimedNotice}</div>
-              <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#b45309' }}>
-                Your code is still active: <strong>TIKTOK10</strong> (10% off Cash on Delivery).
-              </div>
-            </div>
-          )}
-
-          {subscribed ? (
-            <div style={{ background: 'var(--sh-emerald-bg)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '1.25rem', borderRadius: 'var(--radius-lg)', color: 'var(--sh-emerald)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '1rem' }}>
-                <CheckCircle2 size={20} /> Welcome to the SH VIP Circle!
-              </div>
-              <p style={{ fontSize: '0.85rem', margin: '0.35rem 0 0 0' }}>
-                Use promo code <strong>TIKTOK10</strong> at checkout for 10% off your Cash on Delivery order.
-              </p>
-              <div style={{ fontSize: '0.75rem', color: '#047857', marginTop: '0.35rem' }}>
-                *This offer has been activated for your email address (1-time use).
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={handleSubscribe} style={{ display: 'flex', gap: '0.5rem', maxWidth: 480, margin: '0 auto', flexWrap: 'wrap' }}>
-              <input
-                type="email"
-                required
-                placeholder="Enter your email address..."
-                value={emailSub}
-                onChange={(e) => {
-                  setEmailSub(e.target.value);
-                  if (alreadyClaimedNotice) setAlreadyClaimedNotice(null);
-                }}
-                className="form-input"
-                style={{ flex: '1 1 240px', borderRadius: 'var(--radius-full)' }}
-              />
-              <button type="submit" className="btn-primary" style={{ flexShrink: 0 }}>
-                Join VIP Drops &amp; Claim 10%
-              </button>
-            </form>
-          )}
-        </div>
-      </section>
     </div>
   );
 }

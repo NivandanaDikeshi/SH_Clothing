@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { getStoredOrders } from '@/lib/store';
+import { getStoredOrders, initRealtimeFirestoreSync } from '@/lib/store';
 import { Order } from '@/types';
 import {
   LayoutDashboard,
@@ -151,8 +151,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     loadOrderNotifications();
+    const cleanupSync = initRealtimeFirestoreSync();
     window.addEventListener('sh_orders_updated', loadOrderNotifications);
-    return () => window.removeEventListener('sh_orders_updated', loadOrderNotifications);
+    return () => {
+      window.removeEventListener('sh_orders_updated', loadOrderNotifications);
+      if (cleanupSync) cleanupSync();
+    };
   }, []);
 
   useEffect(() => {

@@ -158,7 +158,7 @@ export default function OrderConfirmationPage() {
               className="btn-secondary"
               style={{ padding: '0.75rem 1.4rem', fontSize: '0.875rem', borderRadius: 'var(--radius-full)', textDecoration: 'none', color: '#16a34a' }}
             >
-              Join VIP Community
+              Join WhatsApp Community
             </a>
 
             <button

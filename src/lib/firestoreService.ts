@@ -12,7 +12,7 @@ import {
   writeBatch,
   onSnapshot
 } from 'firebase/firestore';
-import { db, isFirebaseConfigured } from './firebase';
+import { db, isFirebaseConfigured, getFirestoreDb } from './firebase';
 import { Product, Order, StockAdjustment, AuditLog, OrderStatus, CustomRole, CustomerDetails } from '@/types';
 import { initialProducts } from '@/data/initialProducts';
 
@@ -25,10 +25,32 @@ const INQUIRIES_COLLECTION = 'inquiries';
 const ROLES_COLLECTION = 'roles';
 
 /**
+ * Strips unsupported `undefined` keys and serializes structures safely for Firestore
+ */
+export function cleanForFirestore<T>(data: T): any {
+  if (data === undefined) return null;
+  if (data === null) return null;
+  if (typeof data !== 'object') return data;
+
+  if (Array.isArray(data)) {
+    return data.map(item => cleanForFirestore(item));
+  }
+
+  const result: Record<string, any> = {};
+  for (const [key, val] of Object.entries(data as Record<string, any>)) {
+    if (val !== undefined) {
+      result[key] = cleanForFirestore(val);
+    }
+  }
+  return result;
+}
+
+/**
  * Test live connection to Firestore
  */
 export async function testFirestoreConnection(): Promise<{ success: boolean; message: string; details?: any }> {
-  if (!db) {
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) {
     return {
       success: false,
       message: 'Firebase is not yet configured with valid credentials in .env.local or Admin Settings.'
@@ -36,7 +58,7 @@ export async function testFirestoreConnection(): Promise<{ success: boolean; mes
   }
 
   try {
-    const testDocRef = doc(db, '_connection_test', 'ping');
+    const testDocRef = doc(activeDb, '_connection_test', 'ping');
     await setDoc(testDocRef, {
       lastPing: serverTimestamp(),
       clientTime: new Date().toISOString(),
@@ -124,14 +146,15 @@ export async function fetchProductsFromFirestore(): Promise<Product[] | null> {
  * Save or update a single product in Cloud Firestore
  */
 export async function saveProductToFirestore(product: Product): Promise<boolean> {
-  if (!db) return false;
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) return false;
 
   try {
-    const docRef = doc(db, PRODUCTS_COLLECTION, product.id);
-    await setDoc(docRef, {
+    const docRef = doc(activeDb, PRODUCTS_COLLECTION, product.id);
+    await setDoc(docRef, cleanForFirestore({
       ...product,
       updatedAt: new Date().toISOString()
-    }, { merge: true });
+    }), { merge: true });
     return true;
   } catch (error) {
     console.error(`Failed to save product ${product.id} to Firestore:`, error);
@@ -143,15 +166,16 @@ export async function saveProductToFirestore(product: Product): Promise<boolean>
  * Seed initial catalog to Cloud Firestore in a single batch
  */
 export async function seedInitialProductsToFirestore(): Promise<{ success: boolean; count: number; error?: string }> {
-  if (!db) {
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) {
     return { success: false, count: 0, error: 'Firebase is not initialized. Please verify credentials in Admin Settings.' };
   }
 
   try {
-    const batch = writeBatch(db);
+    const batch = writeBatch(activeDb);
     for (const prod of initialProducts) {
-      const docRef = doc(db, PRODUCTS_COLLECTION, prod.id);
-      batch.set(docRef, prod, { merge: true });
+      const docRef = doc(activeDb, PRODUCTS_COLLECTION, prod.id);
+      batch.set(docRef, cleanForFirestore(prod), { merge: true });
     }
     await batch.commit();
 
@@ -172,7 +196,8 @@ export async function seedAllStoreDataToFirestore(ordersList?: Order[]): Promise
   userCount: number;
   error?: string;
 }> {
-  if (!db) {
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) {
     return {
       success: false,
       productCount: 0,
@@ -183,28 +208,28 @@ export async function seedAllStoreDataToFirestore(ordersList?: Order[]): Promise
   }
 
   try {
-    const batch = writeBatch(db);
+    const batch = writeBatch(activeDb);
 
     // 1. Products collection
     for (const prod of initialProducts) {
-      const docRef = doc(db, PRODUCTS_COLLECTION, prod.id);
-      batch.set(docRef, { ...prod, updatedAt: new Date().toISOString() }, { merge: true });
+      const docRef = doc(activeDb, PRODUCTS_COLLECTION, prod.id);
+      batch.set(docRef, cleanForFirestore({ ...prod, updatedAt: new Date().toISOString() }), { merge: true });
     }
 
     // 2. Orders collection
     const sampleOrders = ordersList && ordersList.length > 0 ? ordersList : [];
     for (const ord of sampleOrders) {
-      const docRef = doc(db, ORDERS_COLLECTION, ord.id);
-      batch.set(docRef, {
+      const docRef = doc(activeDb, ORDERS_COLLECTION, ord.id);
+      batch.set(docRef, cleanForFirestore({
         ...ord,
         firestoreCreatedAt: serverTimestamp(),
         updatedAt: new Date().toISOString()
-      }, { merge: true });
+      }), { merge: true });
     }
 
     // 3. Users collection (Initial verified profile)
     const seedUser = {
-      id: 'cust-sh-vip-01',
+      id: 'cust-sh-01',
       name: 'SH Valued Shopper',
       email: 'customer@shclothing.lk',
       phone: '0771167406',
@@ -216,8 +241,8 @@ export async function seedAllStoreDataToFirestore(ordersList?: Order[]): Promise
       createdAt: new Date().toISOString(),
       firestoreCreatedAt: serverTimestamp()
     };
-    const userDocRef = doc(db, USERS_COLLECTION, seedUser.id);
-    batch.set(userDocRef, seedUser, { merge: true });
+    const userDocRef = doc(activeDb, USERS_COLLECTION, seedUser.id);
+    batch.set(userDocRef, cleanForFirestore(seedUser), { merge: true });
 
     await batch.commit();
 
@@ -243,15 +268,20 @@ export async function seedAllStoreDataToFirestore(ordersList?: Order[]): Promise
  * Create a new order in Cloud Firestore
  */
 export async function createOrderInFirestore(order: Order): Promise<boolean> {
-  if (!db) return false;
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) {
+    console.warn('Firestore database is not initialized. Skipping cloud write.');
+    return false;
+  }
 
   try {
-    const docRef = doc(db, ORDERS_COLLECTION, order.id);
-    await setDoc(docRef, {
+    const docRef = doc(activeDb, ORDERS_COLLECTION, order.id);
+    const cleanedPayload = cleanForFirestore({
       ...order,
       firestoreCreatedAt: serverTimestamp(),
       updatedAt: new Date().toISOString()
     });
+    await setDoc(docRef, cleanedPayload);
     return true;
   } catch (error) {
     console.error(`Failed to record order ${order.orderNumber} in Firestore:`, error);
@@ -263,10 +293,11 @@ export async function createOrderInFirestore(order: Order): Promise<boolean> {
  * Fetch all orders from Cloud Firestore
  */
 export async function fetchOrdersFromFirestore(): Promise<Order[] | null> {
-  if (!db) return null;
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) return null;
 
   try {
-    const colRef = collection(db, ORDERS_COLLECTION);
+    const colRef = collection(activeDb, ORDERS_COLLECTION);
     const snap = await getDocs(colRef);
 
     if (snap.empty) {
@@ -329,12 +360,13 @@ export function subscribeToOrdersFirestore(
   onUpdate: (orders: Order[]) => void,
   onError?: (err: any) => void
 ): () => void {
-  if (!db) {
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) {
     return () => {};
   }
 
   try {
-    const colRef = collection(db, ORDERS_COLLECTION);
+    const colRef = collection(activeDb, ORDERS_COLLECTION);
     const unsubscribe = onSnapshot(
       colRef,
       (snapshot) => {
@@ -400,12 +432,13 @@ export function subscribeToProductsFirestore(
   onUpdate: (products: Product[]) => void,
   onError?: (err: any) => void
 ): () => void {
-  if (!db) {
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) {
     return () => {};
   }
 
   try {
-    const colRef = collection(db, PRODUCTS_COLLECTION);
+    const colRef = collection(activeDb, PRODUCTS_COLLECTION);
     const unsubscribe = onSnapshot(
       colRef,
       (snapshot) => {
@@ -468,12 +501,13 @@ export function subscribeToAuditLogsFirestore(
   onUpdate: (logs: AuditLog[]) => void,
   onError?: (err: any) => void
 ): () => void {
-  if (!db) {
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) {
     return () => {};
   }
 
   try {
-    const colRef = collection(db, AUDIT_COLLECTION);
+    const colRef = collection(activeDb, AUDIT_COLLECTION);
     const unsubscribe = onSnapshot(
       colRef,
       (snapshot) => {
@@ -516,10 +550,11 @@ export async function updateOrderStatusInFirestore(
   note?: string,
   courier?: { partner: string; trackingNumber: string; estimatedDelivery?: string }
 ): Promise<boolean> {
-  if (!db) return false;
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) return false;
 
   try {
-    const docRef = doc(db, ORDERS_COLLECTION, orderId);
+    const docRef = doc(activeDb, ORDERS_COLLECTION, orderId);
     const snap = await getDoc(docRef);
 
     if (!snap.exists()) {
@@ -531,7 +566,7 @@ export async function updateOrderStatusInFirestore(
       status,
       timestamp: new Date().toISOString(),
       actor,
-      note
+      note: note || ''
     };
 
     const updatePayload: any = {
@@ -548,7 +583,7 @@ export async function updateOrderStatusInFirestore(
       };
     }
 
-    await updateDoc(docRef, updatePayload);
+    await updateDoc(docRef, cleanForFirestore(updatePayload));
     return true;
   } catch (error) {
     console.error(`Failed to update order ${orderId} in Firestore:`, error);
@@ -560,14 +595,15 @@ export async function updateOrderStatusInFirestore(
  * Save stock adjustment log to Firestore
  */
 export async function saveStockAdjustmentInFirestore(adj: StockAdjustment): Promise<boolean> {
-  if (!db) return false;
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) return false;
 
   try {
-    const docRef = doc(db, ADJUSTMENTS_COLLECTION, adj.id);
-    await setDoc(docRef, {
+    const docRef = doc(activeDb, ADJUSTMENTS_COLLECTION, adj.id);
+    await setDoc(docRef, cleanForFirestore({
       ...adj,
       firestoreCreatedAt: serverTimestamp()
-    });
+    }));
     return true;
   } catch (error) {
     console.error('Failed to log stock adjustment to Firestore:', error);
@@ -579,14 +615,15 @@ export async function saveStockAdjustmentInFirestore(adj: StockAdjustment): Prom
  * Save audit log to Firestore
  */
 export async function logAuditInFirestore(audit: AuditLog): Promise<boolean> {
-  if (!db) return false;
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) return false;
 
   try {
-    const docRef = doc(db, AUDIT_COLLECTION, audit.id);
-    await setDoc(docRef, {
+    const docRef = doc(activeDb, AUDIT_COLLECTION, audit.id);
+    await setDoc(docRef, cleanForFirestore({
       ...audit,
       firestoreCreatedAt: serverTimestamp()
-    });
+    }));
     return true;
   } catch (error) {
     console.error('Failed to write audit log to Firestore:', error);
@@ -609,12 +646,13 @@ export async function saveUserRegistrationToFirestore(
   },
   meta?: Record<string, any>
 ): Promise<boolean> {
-  if (!db) return false;
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) return false;
 
   try {
     const docId = user.id || `user-${Date.now()}`;
-    const docRef = doc(db, USERS_COLLECTION, docId);
-    await setDoc(docRef, {
+    const docRef = doc(activeDb, USERS_COLLECTION, docId);
+    await setDoc(docRef, cleanForFirestore({
       id: docId,
       name: user.name,
       email: user.email,
@@ -627,7 +665,7 @@ export async function saveUserRegistrationToFirestore(
       createdAt: new Date().toISOString(),
       firestoreCreatedAt: serverTimestamp(),
       ...meta
-    }, { merge: true });
+    }), { merge: true });
     return true;
   } catch (error) {
     console.error(`Failed to record user registration for ${user.email} in Firestore:`, error);
@@ -639,10 +677,11 @@ export async function saveUserRegistrationToFirestore(
  * Fetch all registered users from Cloud Firestore
  */
 export async function fetchUsersFromFirestore(): Promise<any[] | null> {
-  if (!db) return null;
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) return null;
 
   try {
-    const colRef = collection(db, USERS_COLLECTION);
+    const colRef = collection(activeDb, USERS_COLLECTION);
     const snap = await getDocs(colRef);
 
     if (snap.empty) {
@@ -671,18 +710,19 @@ export async function saveInquiryToFirestore(inquiry: {
   type?: 'wholesale' | 'general' | 'whatsapp_order';
   productCode?: string;
 }): Promise<boolean> {
-  if (!db) return false;
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) return false;
 
   try {
     const docId = inquiry.id || `inq-${Date.now()}`;
-    const docRef = doc(db, INQUIRIES_COLLECTION, docId);
-    await setDoc(docRef, {
+    const docRef = doc(activeDb, INQUIRIES_COLLECTION, docId);
+    await setDoc(docRef, cleanForFirestore({
       ...inquiry,
       type: inquiry.type || 'whatsapp_order',
       status: 'pending',
       createdAt: new Date().toISOString(),
       firestoreCreatedAt: serverTimestamp()
-    });
+    }));
     return true;
   } catch (error) {
     console.error('Failed to save inquiry to Firestore:', error);
@@ -694,9 +734,10 @@ export async function saveInquiryToFirestore(inquiry: {
  * Permanently delete a product from Cloud Firestore
  */
 export async function deleteProductFromFirestore(productId: string): Promise<boolean> {
-  if (!db) return false;
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) return false;
   try {
-    const docRef = doc(db, PRODUCTS_COLLECTION, productId);
+    const docRef = doc(activeDb, PRODUCTS_COLLECTION, productId);
     await deleteDoc(docRef);
     return true;
   } catch (error) {
@@ -709,9 +750,10 @@ export async function deleteProductFromFirestore(productId: string): Promise<boo
  * Permanently delete an order from Cloud Firestore
  */
 export async function deleteOrderFromFirestore(orderId: string): Promise<boolean> {
-  if (!db) return false;
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) return false;
   try {
-    const docRef = doc(db, ORDERS_COLLECTION, orderId);
+    const docRef = doc(activeDb, ORDERS_COLLECTION, orderId);
     await deleteDoc(docRef);
     return true;
   } catch (error) {
@@ -724,9 +766,10 @@ export async function deleteOrderFromFirestore(orderId: string): Promise<boolean
  * Permanently delete a user from Cloud Firestore
  */
 export async function deleteUserFromFirestore(userId: string): Promise<boolean> {
-  if (!db) return false;
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) return false;
   try {
-    const docRef = doc(db, USERS_COLLECTION, userId);
+    const docRef = doc(activeDb, USERS_COLLECTION, userId);
     await deleteDoc(docRef);
     return true;
   } catch (error) {
@@ -739,14 +782,15 @@ export async function deleteUserFromFirestore(userId: string): Promise<boolean> 
  * Save or update a custom role in Cloud Firestore ('roles' collection)
  */
 export async function saveRoleToFirestore(role: CustomRole): Promise<boolean> {
-  if (!db) return false;
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) return false;
   try {
-    const docRef = doc(db, ROLES_COLLECTION, role.id);
-    await setDoc(docRef, {
+    const docRef = doc(activeDb, ROLES_COLLECTION, role.id);
+    await setDoc(docRef, cleanForFirestore({
       ...role,
       updatedAt: new Date().toISOString(),
       firestoreUpdatedAt: serverTimestamp()
-    }, { merge: true });
+    }), { merge: true });
     return true;
   } catch (error) {
     console.error(`Failed to save role ${role.name} to Firestore:`, error);
@@ -758,9 +802,10 @@ export async function saveRoleToFirestore(role: CustomRole): Promise<boolean> {
  * Delete a custom role from Cloud Firestore
  */
 export async function deleteRoleFromFirestore(roleId: string): Promise<boolean> {
-  if (!db) return false;
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) return false;
   try {
-    const docRef = doc(db, ROLES_COLLECTION, roleId);
+    const docRef = doc(activeDb, ROLES_COLLECTION, roleId);
     await deleteDoc(docRef);
     return true;
   } catch (error) {
@@ -773,9 +818,10 @@ export async function deleteRoleFromFirestore(roleId: string): Promise<boolean> 
  * Fetch custom roles from Cloud Firestore
  */
 export async function fetchRolesFromFirestore(): Promise<CustomRole[] | null> {
-  if (!db) return null;
+  const activeDb = db || getFirestoreDb();
+  if (!activeDb) return null;
   try {
-    const colRef = collection(db, ROLES_COLLECTION);
+    const colRef = collection(activeDb, ROLES_COLLECTION);
     const snap = await getDocs(colRef);
     if (snap.empty) return [];
     const roles: CustomRole[] = [];

@@ -64,3 +64,18 @@ if (isFirebaseConfigured) {
 export const db = appInstance ? getFirestore(appInstance) : null;
 export const auth = appInstance ? getAuth(appInstance) : null;
 export const storage = appInstance ? getStorage(appInstance) : null;
+
+/**
+ * Returns an active Firestore database instance, initializing on demand if necessary
+ */
+export function getFirestoreDb() {
+  if (db) return db;
+  try {
+    const config = getClientFirebaseConfig();
+    const app = !getApps().length ? initializeApp(config) : getApp();
+    return getFirestore(app);
+  } catch (error) {
+    console.warn('Firebase getFirestoreDb notice:', error);
+    return null;
+  }
+}
