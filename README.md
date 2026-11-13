@@ -18,7 +18,6 @@
 - **TikTok Viral Drops Collection:** Direct mapping from TikTok video showcase to instantaneous web checkout.
 - **Search & Multi-Faceted Filtering:** Instant SKU and name search, category tabs, size pills (XS–XXL), color swatches, and price slider.
 - **Rich Product Detail Pages:** High-resolution image galleries, live stock alerts ("Only 2 left!"), size & fit guide modal, fabric/care instructions, and related items.
-- **Slide-out Cart Bag & Full Cart Review:** Free shipping meter progress bar (unlocked at Rs. 10,000), promo coupons (`TIKTOK10`, `SHWELCOME`), and order notes.
 - **1-Page Streamlined COD Checkout:** Doorstep delivery across all 25 districts of Sri Lanka with Colombo express (Rs. 350) and Islandwide standard (Rs. 450) automated fee calculation. Modular architecture ready for future Card/PayHere/Stripe integration.
 - **Celebratory Order Confirmation:** Confetti animation, order reference generator (`SH-2026-XXXX`), live 5-stage fulfilment pipeline, printable receipts, and direct WhatsApp confirmation button.
 - **Customer Live Order Tracking:** Real-time lookup by Order Reference or phone number with assigned courier waybill tracking.
