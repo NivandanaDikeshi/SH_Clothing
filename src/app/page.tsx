@@ -10,13 +10,10 @@ import { LookbookGallery } from '@/components/home/LookbookGallery';
 import { getStoredProducts } from '@/lib/store';
 import { Product } from '@/types';
 import { pixelService } from '@/lib/pixel';
-import { Truck, Sparkles, ShieldCheck, Mail, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Truck } from 'lucide-react';
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [emailSub, setEmailSub] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
-  const [alreadyClaimedNotice, setAlreadyClaimedNotice] = useState<string | null>(null);
 
   useEffect(() => {
     setProducts(getStoredProducts());
@@ -26,37 +23,6 @@ export default function HomePage() {
     window.addEventListener('sh_products_updated', handleUpdate);
     return () => window.removeEventListener('sh_products_updated', handleUpdate);
   }, []);
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    setAlreadyClaimedNotice(null);
-    const cleanEmail = emailSub.trim().toLowerCase();
-    if (!cleanEmail || !cleanEmail.includes('@')) return;
-
-    try {
-      const STORAGE_KEY = 'sh_drop_alerts_claimed_emails_v1';
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const claimedList: string[] = raw ? JSON.parse(raw) : [];
-
-      // Check if this email has ALREADY claimed the 10% offer
-      if (claimedList.includes(cleanEmail)) {
-        setAlreadyClaimedNotice(
-          `This email address (${cleanEmail}) has already claimed the 10% Off Early Drop offer. Each email can receive this offer only once.`
-        );
-        return;
-      }
-
-      // Add to claimed list (one email = one time only)
-      claimedList.push(cleanEmail);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(claimedList));
-
-      setSubscribed(true);
-      setEmailSub('');
-    } catch {
-      setSubscribed(true);
-      setEmailSub('');
-    }
-  };
 
   return (
     <div>
