@@ -10,6 +10,7 @@ import { useCart } from '@/context/CartContext';
 import { SizeGuideModal } from '@/components/shop/SizeGuideModal';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { pixelService } from '@/lib/pixel';
+import { normalizeProductImage } from '@/lib/imageUtils';
 import {
   ShoppingBag,
   Truck,
@@ -123,7 +124,7 @@ export default function ProductDetailPage() {
             {/* Main Active Image */}
             <div style={{ position: 'relative', width: '100%', aspectRatio: '3/4', borderRadius: 'var(--radius-xl)', overflow: 'hidden', background: '#f5f5f5', marginBottom: '1rem', boxShadow: 'var(--shadow-md)' }}>
               <Image
-                src={selectedImage}
+                src={normalizeProductImage(selectedImage)}
                 alt={product.name}
                 fill
                 priority
@@ -167,7 +168,7 @@ export default function ProductDetailPage() {
                     background: '#f5f5f5'
                   }}
                 >
-                  <Image src={img} alt={`${product.name} angle ${i + 1}`} fill unoptimized style={{ objectFit: 'cover' }} />
+                  <Image src={normalizeProductImage(img)} alt={`${product.name} angle ${i + 1}`} fill unoptimized style={{ objectFit: 'cover' }} />
                 </button>
               ))}
             </div>

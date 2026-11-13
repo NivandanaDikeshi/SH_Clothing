@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getStoredOrders } from '@/lib/store';
 import { fetchOrdersFromFirestore } from '@/lib/firestoreService';
+import { normalizeProductImage } from '@/lib/imageUtils';
 import { useAuth } from '@/context/AuthContext';
 import { Order } from '@/types';
 import {
@@ -297,7 +298,7 @@ function TrackOrderContent() {
                       {order.items.map(item => (
                         <div key={item.id} style={{ display: 'flex', gap: '0.85rem', alignItems: 'center' }}>
                           <div style={{ width: 48, height: 60, position: 'relative', borderRadius: 4, overflow: 'hidden', background: '#f5f5f5', flexShrink: 0 }}>
-                            <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />
+                            <Image src={normalizeProductImage(item.image)} alt={item.name} fill style={{ objectFit: 'cover' }} />
                           </div>
                           <div style={{ flex: 1 }}>
                             <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{item.name}</div>

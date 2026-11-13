@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import confetti from 'canvas-confetti';
 import { getStoredOrders } from '@/lib/store';
+import { normalizeProductImage } from '@/lib/imageUtils';
 import { Order } from '@/types';
 import {
   CheckCircle2,
@@ -221,7 +222,7 @@ export default function OrderConfirmationPage() {
             {order.items.map(item => (
               <div key={item.id} style={{ display: 'flex', gap: '1rem', alignItems: 'center', borderBottom: '1px solid var(--sh-sand)', paddingBottom: '1rem' }}>
                 <div style={{ width: 64, height: 80, position: 'relative', borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: '#f5f5f5', flexShrink: 0 }}>
-                  <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />
+                  <Image src={normalizeProductImage(item.image)} alt={item.name} fill style={{ objectFit: 'cover' }} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--sh-black)' }}>{item.name}</div>

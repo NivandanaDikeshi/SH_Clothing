@@ -23,6 +23,7 @@ import {
   MapPin,
   Clock
 } from 'lucide-react';
+import { normalizeProductImage } from '@/lib/imageUtils';
 
 const SRI_LANKA_DISTRICTS = [
   'Colombo',
@@ -529,7 +530,7 @@ export default function CheckoutPage() {
                 {items.map(item => (
                   <div key={item.id} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                     <div style={{ width: 52, height: 65, position: 'relative', borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: '#f5f5f5', flexShrink: 0 }}>
-                      <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />
+                      <Image src={normalizeProductImage(item.image)} alt={item.name} fill style={{ objectFit: 'cover' }} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: '0.85rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

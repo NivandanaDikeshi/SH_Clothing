@@ -17,6 +17,7 @@ import {
   ShoppingBag,
   Tag
 } from 'lucide-react';
+import { normalizeProductImage } from '@/lib/imageUtils';
 
 export const CartDrawer: React.FC = () => {
   const router = useRouter();
@@ -155,7 +156,7 @@ export const CartDrawer: React.FC = () => {
                 {/* Product Thumbnail */}
                 <div style={{ width: 78, height: 98, position: 'relative', borderRadius: 'var(--radius-md)', overflow: 'hidden', flexShrink: 0, background: '#f5f5f5' }}>
                   <Image
-                    src={item.image}
+                    src={normalizeProductImage(item.image)}
                     alt={item.name}
                     fill
                     style={{ objectFit: 'cover' }}

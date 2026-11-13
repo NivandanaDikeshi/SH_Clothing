@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { Trash2, Plus, Minus, ArrowRight, ShieldCheck, Truck, ShoppingBag } from 'lucide-react';
+import { normalizeProductImage } from '@/lib/imageUtils';
 
 export default function CartPage() {
   const router = useRouter();
@@ -75,7 +76,7 @@ export default function CartPage() {
                   }}
                 >
                   <div style={{ width: 90, height: 115, position: 'relative', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: '#f5f5f5', flexShrink: 0 }}>
-                    <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />
+                    <Image src={normalizeProductImage(item.image)} alt={item.name} fill style={{ objectFit: 'cover' }} />
                   </div>
 
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>

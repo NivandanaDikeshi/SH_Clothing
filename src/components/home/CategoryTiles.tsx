@@ -12,7 +12,7 @@ const CATEGORIES = [
     slug: 'Tops',
     description:
       'Discover everyday essentials, from flattering crop tops and versatile shirts to easy layering pieces.',
-    image: 'images/category-tops.jpg',
+    image: '/images/category-tops.jpg',
     itemCount: 'Export Quality Curation',
   },
   {
@@ -21,7 +21,7 @@ const CATEGORIES = [
     slug: 'Frocks',
     description:
       'Explore feminine styles, from soft, flowing frocks to relaxed linen designs and elegant wrap silhouettes.',
-    image: 'images/category-frocks.jpg',
+    image: '/images/category-frocks.jpg',
     itemCount: 'Trending Social Drops',
   },
   {
@@ -30,7 +30,7 @@ const CATEGORIES = [
     slug: 'Bottoms',
     description:
       'Find your fit with polished tailored trousers and timeless denim made for everyday wear.',
-    image: 'images/category-bottoms.jpg',
+    image: '/images/category-bottoms.jpg',
     itemCount: 'Wardrobe Staples',
   },
 ];

@@ -15,6 +15,7 @@ import {
 import { db, isFirebaseConfigured, getFirestoreDb } from './firebase';
 import { Product, Order, StockAdjustment, AuditLog, OrderStatus, CustomRole, CustomerDetails } from '@/types';
 import { initialProducts } from '@/data/initialProducts';
+import { normalizeProductImage } from './imageUtils';
 
 const PRODUCTS_COLLECTION = 'products';
 const ORDERS_COLLECTION = 'orders';
@@ -117,7 +118,9 @@ export async function fetchProductsFromFirestore(): Promise<Product[] | null> {
           description: data.description || '',
           price: Number(data.price) || 0,
           originalPrice: data.originalPrice ? Number(data.originalPrice) : undefined,
-          images: Array.isArray(data.images) && data.images.length > 0 ? data.images : ['/images/products/top-1.jpg'],
+          images: Array.isArray(data.images) && data.images.length > 0
+            ? data.images.map((img: string) => normalizeProductImage(img))
+            : ['/logo.jpg'],
           sizes: Array.isArray(data.sizes) && data.sizes.length > 0 ? data.sizes : ['M'],
           colors: Array.isArray(data.colors) && data.colors.length > 0 ? data.colors : [{ name: 'Default', hex: '#000000' }],
           variants: Array.isArray(data.variants) ? data.variants : [],
@@ -460,7 +463,9 @@ export function subscribeToProductsFirestore(
               description: data.description || '',
               price: Number(data.price) || 0,
               originalPrice: data.originalPrice ? Number(data.originalPrice) : undefined,
-              images: Array.isArray(data.images) && data.images.length > 0 ? data.images : ['/images/products/top-1.jpg'],
+              images: Array.isArray(data.images) && data.images.length > 0
+            ? data.images.map((img: string) => normalizeProductImage(img))
+            : ['/logo.jpg'],
               sizes: Array.isArray(data.sizes) && data.sizes.length > 0 ? data.sizes : ['M'],
               colors: Array.isArray(data.colors) && data.colors.length > 0 ? data.colors : [{ name: 'Default', hex: '#000000' }],
               variants: Array.isArray(data.variants) ? data.variants : [],

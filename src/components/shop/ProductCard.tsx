@@ -7,6 +7,7 @@ import { Product } from '@/types';
 import { useCart } from '@/context/CartContext';
 import { ShoppingBag, Sparkles, Check, ArrowRight } from 'lucide-react';
 import { pixelService } from '@/lib/pixel';
+import { normalizeProductImage } from '@/lib/imageUtils';
 
 interface ProductCardProps {
   product: Product;
@@ -19,7 +20,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [addedNotice, setAddedNotice] = useState(false);
 
-  const displayImage = isHovered && product.images[1] ? product.images[1] : (product.images[0] || '/logo.jpg');
+  const rawImage = isHovered && product.images[1] ? product.images[1] : (product.images[0] || '/logo.jpg');
+  const displayImage = normalizeProductImage(rawImage);
 
   const discountPercent = product.salePrice
     ? Math.round(((product.price - product.salePrice) / product.price) * 100)

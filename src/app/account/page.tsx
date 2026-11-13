@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { getStoredOrders } from '@/lib/store';
 import { fetchOrdersFromFirestore } from '@/lib/firestoreService';
+import { normalizeProductImage } from '@/lib/imageUtils';
 import { Order } from '@/types';
 import {
   User,
@@ -666,7 +667,7 @@ export default function AccountPage() {
                           }}
                         >
                           <img
-                            src={item.image}
+                            src={normalizeProductImage(item.image)}
                             alt={item.name}
                             style={{
                               width: 52,

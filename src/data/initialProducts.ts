@@ -10,9 +10,9 @@ export const initialProducts: Product[] = [
     price: 5450,
     salePrice: 4750,
     images: [
-      'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=1000&q=80'
+      '/uploads/garment_1794499129188_bmsh_100_-silk-printed-v-neck-bias-cut-midi-dress-cherry-red-01.webp',
+      '/uploads/garment_1794499129191_yr8r_100_-silk-printed-v-neck-bias-cut-midi-dress-cherry-red-06.webp',
+      '/uploads/garment_1794532219723_93y5_100_-silk-printed-v-neck-bias-cut-midi-dress-cherry-red-07.jpg'
     ],
     category: 'Frocks',
     subcategory: 'Midi Frocks',
@@ -56,9 +56,10 @@ export const initialProducts: Product[] = [
     price: 2850,
     salePrice: 2450,
     images: [
-      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=1000&q=80'
+      '/uploads/garment_1794532129422_kpb9_womens-oversized-cotton-half-sleeve-t-shirt-white-model-front-tucked.webp',
+      '/uploads/garment_1794532102405_r50b_images__1_.jpeg',
+      '/uploads/garment_1794532102420_i4ph_images__2_.jpeg',
+      '/uploads/garment_1794532102422_aln7_images__3_.jpeg'
     ],
     category: 'Tops',
     subcategory: 'T-Shirts',
@@ -98,8 +99,9 @@ export const initialProducts: Product[] = [
     description: 'High-waisted tailored trousers designed with sharp front pleats and fluid wide-leg cut. Features a clean structured waistband, hidden front hook-and-bar closure, and slant pockets. Seamlessly transitions from office chic to dinner dates.',
     price: 4650,
     images: [
-      'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1551803091-e20673f15770?auto=format&fit=crop&w=1000&q=80'
+      '/uploads/garment_1794532424212_zfbp_7fe4b6fd-623b-4604-a5cc-c7c6e5b5d6f6.webp',
+      '/uploads/garment_1794532424218_pkdr_category-bottoms.jpg',
+      '/uploads/garment_1794532424205_zb1g_5b3a9f1b10e0e626e4d6.jpeg'
     ],
     category: 'Bottoms',
     subcategory: 'Trousers',
@@ -139,8 +141,9 @@ export const initialProducts: Product[] = [
     price: 6850,
     salePrice: 5950,
     images: [
-      'https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=1000&q=80'
+      '/uploads/garment_1794532390422_y5bd_51uLCwzxgpL__AC_UY1100_.jpg',
+      '/uploads/garment_1794532390425_1jc4_78C0D852-A9DE-41FE-9F80-167C7DFAB237.webp',
+      '/uploads/garment_1794532390436_8yqm_look-5.jpg'
     ],
     category: 'Tops',
     subcategory: 'Denim Tops & Jackets',
@@ -178,8 +181,9 @@ export const initialProducts: Product[] = [
     price: 4650,
     salePrice: 4200,
     images: [
-      'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=1000&q=80'
+      '/uploads/garment_1794532219740_669b_OtherworldlySangriaRedPolkaDotDress12_500x.webp',
+      '/uploads/garment_1794532219730_hfvk_images__11_.jpeg',
+      '/uploads/garment_1794532219736_jiz0_images__12_.jpeg'
     ],
     category: 'Frocks',
     subcategory: 'Wrap Frocks',
@@ -216,8 +220,10 @@ export const initialProducts: Product[] = [
     price: 4950,
     salePrice: 4250,
     images: [
-      'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1502716119720-b23a93e5fe1b?auto=format&fit=crop&w=1000&q=80'
+      '/uploads/garment_1794499720069_7zmq_whistles-cotton-tiered-maxi-sun-dress-plum-01.webp',
+      '/uploads/garment_1794532267656_q8ik_images__13_.jpeg',
+      '/uploads/garment_1794532267662_rifl_images__14_.jpeg',
+      '/uploads/garment_1794532267669_o0py_images__15_.jpeg'
     ],
     category: 'Frocks',
     subcategory: 'Summer Frocks',
@@ -255,8 +261,10 @@ export const initialProducts: Product[] = [
     description: 'Camp collar resort shirt tailored from premium medium-weight slub linen. Finished with natural mother-of-pearl buttons and a clean square hem. Wear open over a tank or buttoned up for contemporary casual elegance.',
     price: 3950,
     images: [
-      'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=1000&q=80'
+      '/uploads/garment_1794532300894_cx8h_images__17_.jpeg',
+      '/uploads/garment_1794532300900_jyeo_images__18_.jpeg',
+      '/uploads/garment_1794532300888_vjii_images__16_.jpeg',
+      '/uploads/garment_1794532300902_n6my_images__19_.jpeg'
     ],
     category: 'Tops',
     subcategory: 'Shirts',
@@ -295,8 +303,11 @@ export const initialProducts: Product[] = [
     price: 5900,
     salePrice: 5200,
     images: [
-      'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1582552938357-32b906df40cb?auto=format&fit=crop&w=1000&q=80'
+      '/uploads/garment_1794532497426_rg4g_Capture0477-3.webp',
+      '/uploads/garment_1794532470785_fqge_im.jpeg',
+      '/uploads/garment_1794532470787_0d65_images__10_.jpeg',
+      '/uploads/garment_1794532497433_9xwr_images__8_.jpeg',
+      '/uploads/garment_1794532526880_loe0_P01111914.avif'
     ],
     category: 'Bottoms',
     subcategory: 'Jeans',

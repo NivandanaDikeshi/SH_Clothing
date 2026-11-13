@@ -1,5 +1,6 @@
 import { Product, Order, OrderStatus, StockAdjustment, AuditLog, CustomerDetails, CartItem, DeliveryZone, CustomRole } from '@/types';
 import { initialProducts, deliveryZones } from '@/data/initialProducts';
+import { normalizeProductImage } from './imageUtils';
 import {
   createOrderInFirestore,
   updateOrderStatusInFirestore,
@@ -21,7 +22,7 @@ import {
 } from './firestoreService';
 import { isFirebaseConfigured } from './firebase';
 
-const PRODUCTS_KEY = 'sh_clothing_products_v3';
+const PRODUCTS_KEY = 'sh_clothing_products_v4';
 const ORDERS_KEY = 'sh_clothing_orders_v1';
 const ADJUSTMENTS_KEY = 'sh_clothing_stock_adjustments_v1';
 const AUDIT_KEY = 'sh_clothing_audit_logs_v1';
@@ -121,7 +122,7 @@ const sampleOrders: Order[] = [
         productId: 'prod-001',
         name: 'SH Silk Touch Satin Bias-Cut Midi Frock',
         productCode: 'SH-FR-01',
-        image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=600&q=80',
+        image: '/uploads/garment_1794499129188_bmsh_100_-silk-printed-v-neck-bias-cut-midi-dress-cherry-red-01.webp',
         size: 'M',
         color: 'Emerald Green',
         price: 4750,
@@ -173,7 +174,7 @@ const sampleOrders: Order[] = [
         productId: 'prod-002',
         name: 'SH Oversized Heavyweight Cotton Minimalist Tee',
         productCode: 'SH-TP-01',
-        image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80',
+        image: '/uploads/garment_1794532129422_kpb9_womens-oversized-cotton-half-sleeve-t-shirt-white-model-front-tucked.webp',
         size: 'L',
         color: 'Vintage Oatmeal',
         price: 2450,
@@ -228,7 +229,9 @@ export function getStoredProducts(): Product[] {
       .map(p => ({
         ...p,
         price: Number(p.price) || 0,
-        images: Array.isArray(p.images) && p.images.length > 0 ? p.images : ['/images/products/top-1.jpg'],
+        images: Array.isArray(p.images) && p.images.length > 0 
+          ? p.images.map(img => normalizeProductImage(img))
+          : ['/logo.jpg'],
         colors: Array.isArray(p.colors) && p.colors.length > 0 ? p.colors : [{ name: 'Default', hex: '#111827' }],
         sizes: Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes : ['M'],
         variants: Array.isArray(p.variants) ? p.variants : [],

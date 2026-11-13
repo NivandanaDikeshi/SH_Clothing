@@ -18,7 +18,7 @@ interface LookItem {
 const LOOKS: LookItem[] = [
   {
     id: 'look-1',
-    image: 'images/look-1.jpg',
+    image: '/images/look-1.jpg',
     title: 'Emerald Silk Bias-Cut Frock',
     category: 'frocks',
     tag: 'TikTok Viral Drop',
@@ -27,7 +27,7 @@ const LOOKS: LookItem[] = [
   },
   {
     id: 'look-2',
-    image: 'images/look-2.jpg',
+    image: '/images/look-2.jpg',
     title: 'Resort Linen Camp Collar Shirt',
     category: 'tops',
     tag: 'Summer Edit',
@@ -36,7 +36,7 @@ const LOOKS: LookItem[] = [
   },
   {
     id: 'look-3',
-    image: 'images/look-3.jpg',
+    image: '/images/look-3.jpg',
     title: 'Heavyweight 260GSM Boxy Tee',
     category: 'tops',
     tag: 'Streetwear Staple',
@@ -45,7 +45,7 @@ const LOOKS: LookItem[] = [
   },
   {
     id: 'look-4',
-    image: 'images/look-4.jpg',
+    image: '/images/look-4.jpg',
     title: 'Flora Breeze Tiered Summer Frock',
     category: 'frocks',
     tag: 'Exclusive Surplus',
@@ -54,7 +54,7 @@ const LOOKS: LookItem[] = [
   },
   {
     id: 'look-5',
-    image: 'images/look-5.jpg',
+    image: '/images/look-5.jpg',
     title: 'High-Waist Tailored Pleated Trouser',
     category: 'bottoms',
     tag: 'Office to Evening',
@@ -63,7 +63,7 @@ const LOOKS: LookItem[] = [
   },
   {
     id: 'look-6',
-    image: 'images/look-6.jpg',
+    image: '/images/look-6.jpg',
     title: '90s Vintage Washed Straight Denim',
     category: 'bottoms',
     tag: 'Wardrobe Classic',
@@ -72,7 +72,7 @@ const LOOKS: LookItem[] = [
   },
   {
     id: 'look-7',
-    image: 'images/look-7.jpg',
+    image: '/images/look-7.jpg',
     title: 'Cowl Neck Cocktail Slip Frock',
     category: 'frocks',
     tag: 'Night Out Glam',
@@ -81,7 +81,7 @@ const LOOKS: LookItem[] = [
   },
   {
     id: 'look-8',
-    image: 'images/look-8.jpg',
+    image: '/images/look-8.jpg',
     title: 'Washed Charcoal Graphic Heavy Tee',
     category: 'tops',
     tag: 'TikTok Top Pick',

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { getStoredProducts, saveStoredProducts, logAuditEvent, deleteProduct, initRealtimeFirestoreSync } from '@/lib/store';
 import { DeleteConfirmModal } from '@/components/admin/DeleteConfirmModal';
+import { normalizeProductImage } from '@/lib/imageUtils';
 import { Product, ProductStatus, ProductVariant } from '@/types';
 import {
   ShoppingBag,
@@ -570,7 +571,7 @@ export default function AdminProductsPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
                       <div style={{ width: 44, height: 56, position: 'relative', borderRadius: 4, overflow: 'hidden', background: '#f5f5f5', flexShrink: 0 }}>
                         <img
-                          src={(product.images && product.images[0]) || '/logo.jpg'}
+                          src={normalizeProductImage(product.images && product.images[0])}
                           alt={product.name}
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
@@ -887,7 +888,7 @@ export default function AdminProductsPage() {
                           }}
                         >
                           <img
-                            src={imgUrl}
+                            src={normalizeProductImage(imgUrl)}
                             alt={`View ${idx + 1}`}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />
